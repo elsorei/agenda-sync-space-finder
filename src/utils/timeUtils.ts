@@ -29,6 +29,15 @@ export const getDayViewHours = (): string[] => {
   });
 };
 
+// Get half-hour intervals for day view (7:00, 7:30, 8:00, etc.)
+export const getDayViewHalfHourIntervals = (): string[] => {
+  return Array.from({ length: 31 }, (_, i) => {
+    const hour = Math.floor(i / 2) + 7; // Start from 7:00
+    const minutes = i % 2 === 0 ? "00" : "30";
+    return `${hour.toString().padStart(2, '0')}:${minutes}`;
+  });
+};
+
 // Filter events for a specific date
 export const filterEventsForDate = (events: Event[], date: Date): Event[] => {
   return events.filter(event => isSameDay(event.start, date));
@@ -36,7 +45,7 @@ export const filterEventsForDate = (events: Event[], date: Date): Event[] => {
 
 // Filter events for a specific user
 export const filterEventsForUser = (events: Event[], userId: string): Event[] => {
-  return events.filter(event => event.userIds.includes(userId));
+  return events.filter(event => event.userIds && event.userIds.includes(userId));
 };
 
 // Check if a time is occupied for a user

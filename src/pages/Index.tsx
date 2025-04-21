@@ -8,6 +8,7 @@ import EventDialog from "@/components/EventDialog";
 import FreeSlotFinder from "@/components/FreeSlotFinder";
 import { mockUsers, generateMockEvents, createEvent } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
+import { addMinutes } from "date-fns";
 
 const Index = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -52,7 +53,8 @@ const Index = () => {
   };
 
   // Gestisce adesso più utenti invitati
-  const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
+  const handleAddEvent = (userIds: string[], start: Date, durationMinutes: number = 60) => {
+    const end = addMinutes(start, durationMinutes);
     const newEvent: Event = {
       id: `new-${Date.now()}`,
       title: "",

@@ -2,7 +2,7 @@
 import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
-import { formatTime, getEventStyle } from "@/utils/timeUtils";
+import { formatTime, getEventStyle, getDayViewHalfHourIntervals } from "@/utils/timeUtils";
 import { startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -16,14 +16,14 @@ const DayView = ({
 }: DayViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get hours for the day view
-  const hours = Array.from({ length: 16 }, (_, i) => i + 7); // 7:00 to 22:00
+  // Get half-hour intervals for the day view
+  const halfHourIntervals = getDayViewHalfHourIntervals();
   
   // Generate the current day's start time
   const dayStart = startOfDay(date);
   
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || !onAddEvent) return;
+    if (!containerRef.current || !onAddEvent || e.target !== e.currentTarget) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const y = e.clientY - rect.top;
@@ -31,7 +31,7 @@ const DayView = ({
     // Calculate hour based on click position
     const clickedHour = 7 + y / hourHeight; // Add 7 because we start at 7am
     const hour = Math.floor(clickedHour);
-    const minutes = Math.floor((clickedHour - hour) * 60);
+    const minutes = Math.round((clickedHour - hour) * 60 / 30) * 30; // Round to nearest 30 min
     
     // Create a new date with the clicked time
     const newEventStart = new Date(date);
@@ -39,6 +39,22 @@ const DayView = ({
     
     // For simplicity, we'll create a 1-hour event for the first user
     // In a real app, you'd show a form to select user and other details
+    if (users.length > 0) {
+      onAddEvent([users[0].id], newEventStart, 60);
+    }
+  };
+
+  const handleTimeSlotClick = (timeString: string) => {
+    if (!onAddEvent) return;
+    
+    // Parse the time string (format: "HH:MM")
+    const [hours, minutes] = timeString.split(':').map(Number);
+    
+    // Create a new date with the selected time
+    const newEventStart = new Date(date);
+    newEventStart.setHours(hours, minutes, 0, 0);
+    
+    // Create an event for the first selected user (or will select in dialog)
     if (users.length > 0) {
       onAddEvent([users[0].id], newEventStart, new Date(newEventStart.getTime() + 60 * 60 * 1000));
     }
@@ -98,19 +114,34 @@ const DayView = ({
         
         {/* Main calendar grid */}
         <div className="flex-1 relative" style={{ height: `${16 * hourHeight}px` }}>
-          {/* Time indicators */}
+          {/* Time indicators with half-hour slots */}
           <div className="absolute left-0 top-0 w-full h-full">
-            {Array.from({ length: 16 }, (_, i) => i + 7).map((hour) => (
-              <div 
-                key={hour} 
-                className="absolute left-0 w-full border-t border-gray-200 flex items-center"
-                style={{ top: `${(hour - 7) * hourHeight}px` }}
-              >
-                <span className="text-xs text-gray-500 ml-2">
-                  {`${hour}:00`}
-                </span>
-              </div>
-            ))}
+            {halfHourIntervals.map((timeStr, index) => {
+              const isFullHour = timeStr.endsWith(":00");
+              return (
+                <div 
+                  key={timeStr} 
+                  className={cn(
+                    "absolute left-0 w-full flex items-center",
+                    isFullHour ? "border-t border-gray-200" : "border-t border-gray-100"
+                  )}
+                  style={{ 
+                    top: `${index * (hourHeight / 2)}px`,
+                    height: `${hourHeight / 2}px` 
+                  }}
+                >
+                  {isFullHour && (
+                    <span className="text-xs text-gray-500 ml-2">
+                      {timeStr}
+                    </span>
+                  )}
+                  <button 
+                    className="absolute left-0 top-0 w-full h-full opacity-0 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
+                    onClick={() => handleTimeSlotClick(timeStr)}
+                  />
+                </div>
+              );
+            })}
           </div>
           
           {/* Background for click handling */}
