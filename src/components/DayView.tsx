@@ -48,9 +48,11 @@ const DayView = ({
     }
   };
 
-  const handleTimeSlotClick = (e: React.MouseEvent, timeString: string) => {
+  // Gestore unificato per click e touch
+  const handleTimeSlotClick = (e: React.MouseEvent | React.TouchEvent, timeString: string) => {
     // Ferma la propagazione dell'evento per evitare che il click raggiunga il background
     e.stopPropagation();
+    e.preventDefault(); // Importante per dispositivi touch
     
     if (!onAddEvent) return;
     
@@ -149,8 +151,10 @@ const DayView = ({
                     </span>
                   )}
                   <button 
-                    className="absolute left-0 top-0 w-full h-full opacity-0 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
+                    className="absolute left-0 top-0 w-full h-full hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
+                    style={{ touchAction: "manipulation" }}
                     onClick={(e) => handleTimeSlotClick(e, timeStr)}
+                    onTouchStart={(e) => handleTimeSlotClick(e, timeStr)}
                   />
                 </div>
               );
@@ -160,7 +164,8 @@ const DayView = ({
           {/* Background for click handling */}
           <div 
             ref={containerRef}
-            className="absolute left-0 top-0 w-full h-full"
+            className="absolute left-0 top-0 w-full h-full touch-none"
+            style={{ touchAction: "none" }}
             onClick={handleBackgroundClick}
           />
 
