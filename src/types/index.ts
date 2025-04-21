@@ -6,11 +6,11 @@ export interface User {
   color: string;
 }
 
-// Cambia: l’evento ora può appartenere a più utenti tramite userIds
+// Cambia: l'evento ora può appartenere a più utenti tramite userIds
 export interface Event {
   id: string;
   // userId: string; // RIMOSSO
-  userIds: string[]; // AGGIUNTO: utenti invitati all’evento
+  userIds: string[]; // AGGIUNTO: utenti invitati all'evento
   title: string;
   description?: string;
   start: Date;

@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
 import { formatTime, getEventStyle, getDayViewHalfHourIntervals } from "@/utils/timeUtils";
-import { startOfDay } from "date-fns";
+import { startOfDay, addMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const DayView = ({ 
@@ -37,10 +37,13 @@ const DayView = ({
     const newEventStart = new Date(date);
     newEventStart.setHours(hour, minutes, 0, 0);
     
+    // Create a default end time 60 minutes later
+    const newEventEnd = addMinutes(newEventStart, 60);
+    
     // For simplicity, we'll create a 1-hour event for the first user
     // In a real app, you'd show a form to select user and other details
     if (users.length > 0) {
-      onAddEvent([users[0].id], newEventStart, 60);
+      onAddEvent([users[0].id], newEventStart, newEventEnd);
     }
   };
 
@@ -54,9 +57,12 @@ const DayView = ({
     const newEventStart = new Date(date);
     newEventStart.setHours(hours, minutes, 0, 0);
     
+    // Create an end time 30 minutes later
+    const newEventEnd = addMinutes(newEventStart, 30);
+    
     // Create an event for the first selected user (or will select in dialog)
     if (users.length > 0) {
-      onAddEvent([users[0].id], newEventStart, new Date(newEventStart.getTime() + 60 * 60 * 1000));
+      onAddEvent([users[0].id], newEventStart, newEventEnd);
     }
   };
   

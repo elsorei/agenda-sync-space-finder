@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -52,9 +51,8 @@ const Index = () => {
     }
   };
 
-  // Gestisce adesso più utenti invitati
-  const handleAddEvent = (userIds: string[], start: Date, durationMinutes: number = 60) => {
-    const end = addMinutes(start, durationMinutes);
+  // Gestisce l'aggiunta di eventi con un orario di inizio e fine specifico
+  const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
     const newEvent: Event = {
       id: `new-${Date.now()}`,
       title: "",
