@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
@@ -40,17 +39,17 @@ const DayView = ({
     // For simplicity, we'll create a 1-hour event for the first user
     // In a real app, you'd show a form to select user and other details
     if (users.length > 0) {
-      onAddEvent(users[0].id, newEventStart, new Date(newEventStart.getTime() + 60 * 60 * 1000));
+      onAddEvent([users[0].id], newEventStart, new Date(newEventStart.getTime() + 60 * 60 * 1000));
     }
   };
   
-  const renderEvent = (event: Event, zIndex: number) => {
-    const { top, height } = getEventStyle(event, hourHeight, dayStart);
-    const user = users.find(u => u.id === event.userId);
-    
+  const renderEvent = (event: Event, zIndex: number, mainUserId: string) => {
+    const { top, height } = getEventStyle(event, hourHeight, startOfDay(date));
+    const user = users.find(u => u.id === mainUserId);
+
     return (
       <div
-        key={event.id}
+        key={event.id + "-" + mainUserId}
         className="absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden"
         style={{
           top: `${top}px`,
@@ -80,7 +79,7 @@ const DayView = ({
       </div>
     );
   };
-  
+
   return (
     <div className="flex-1 overflow-y-auto border rounded-md bg-white">
       <div className="flex">
@@ -97,10 +96,10 @@ const DayView = ({
         </div>
         
         {/* Main calendar grid */}
-        <div className="flex-1 relative" style={{ height: `${hours.length * hourHeight}px` }}>
+        <div className="flex-1 relative" style={{ height: `${16 * hourHeight}px` }}>
           {/* Time indicators */}
           <div className="absolute left-0 top-0 w-full h-full">
-            {hours.map((hour) => (
+            {Array.from({ length: 16 }, (_, i) => i + 7).map((hour) => (
               <div 
                 key={hour} 
                 className="absolute left-0 w-full border-t border-gray-200 flex items-center"
@@ -119,12 +118,13 @@ const DayView = ({
             className="absolute left-0 top-0 w-full h-full"
             onClick={handleBackgroundClick}
           />
-          
-          {/* Events for each user */}
+
+          {/* Event per ogni user */}
           {users.map((user, userIndex) => {
-            const userEvents = filterEventsForUser(events, user.id);
-            return userEvents.map((event, eventIndex) => 
-              renderEvent(event, userIndex * 100 + eventIndex)
+            // mostra solo eventi in cui l’utente è invitato
+            const userEvents = events.filter((event) => event.userIds.includes(user.id));
+            return userEvents.map((event, eventIndex) =>
+              renderEvent(event, userIndex * 100 + eventIndex, user.id)
             );
           })}
         </div>

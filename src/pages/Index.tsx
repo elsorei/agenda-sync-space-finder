@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -17,21 +18,21 @@ const Index = () => {
   const [showFreeSlotFinder, setShowFreeSlotFinder] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState<boolean>(false);
-  
-  // Load events for the current date
+
+  // Carica eventi per il giorno corrente
   useEffect(() => {
     const mockEvents = generateMockEvents(currentDate);
     setEvents(mockEvents);
   }, [currentDate]);
-  
+
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
   };
-  
+
   const handleViewChange = (view: 'day' | 'week' | 'month') => {
     setCalendarView(view);
   };
-  
+
   const handleUserSelect = (userId: string) => {
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
@@ -41,7 +42,7 @@ const Index = () => {
       }
     });
   };
-  
+
   const handleSelectAllUsers = () => {
     if (selectedUsers.length === users.length) {
       setSelectedUsers([]);
@@ -49,30 +50,41 @@ const Index = () => {
       setSelectedUsers(users.map(user => user.id));
     }
   };
-  
-  const handleAddEvent = (userId: string, start: Date, end: Date) => {
-    const newEvent = createEvent(userId, "Nuovo evento", start, end);
+
+  // Cambiato: gestisce adesso più utenti invitati!
+  const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
+    const newEvent: Event = {
+      id: `new-${Date.now()}`,
+      title: "",
+      description: "",
+      start,
+      end,
+      userIds,
+      color: "#9b87f5"
+    };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
   };
-  
+
+  // Aggiorna anche edit event: ora un evento può avere più utenti
   const handleEditEvent = (event: Event) => {
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
   };
-  
+
+  // Salva evento con più utenti: lo aggiunge a ogni utente invitato
   const handleSaveEvent = (updatedEvent: Event) => {
     setEvents(prev => {
-      // Check if it's a new event
+      // Nuovo evento
       if (updatedEvent.id.startsWith('new-')) {
-        // New event - add it to the list
         toast({
           title: "Evento creato",
           description: `L'evento "${updatedEvent.title}" è stato creato.`,
         });
+        // id reale
         return [...prev, { ...updatedEvent, id: `event-${Date.now()}` }];
       } else {
-        // Existing event - update it
+        // Aggiornamento evento
         toast({
           title: "Evento aggiornato",
           description: `L'evento "${updatedEvent.title}" è stato aggiornato.`,
@@ -82,7 +94,7 @@ const Index = () => {
     });
     setIsEventDialogOpen(false);
   };
-  
+
   const handleDeleteEvent = (eventId: string) => {
     setEvents(prev => prev.filter(e => e.id !== eventId));
     toast({
@@ -91,21 +103,18 @@ const Index = () => {
       variant: "destructive",
     });
   };
-  
+
   const handleFindFreeSlots = () => {
     setShowFreeSlotFinder(prev => !prev);
   };
-  
+
   const handleCreateFromFreeSlot = (start: Date, end: Date, userIds: string[]) => {
-    // For simplicity, we'll create an event for the first selected user
-    // In a real app, you might show a dialog to choose which user
+    // Quando creo da slot libero, posso selezionare gli utenti invitati!
     if (userIds.length > 0) {
-      const newEvent = createEvent(userIds[0], "Nuovo evento", start, end);
-      setSelectedEvent(newEvent);
-      setIsEventDialogOpen(true);
+      handleAddEvent(userIds, start, end);
     }
   };
-  
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <CalendarHeader
@@ -115,7 +124,7 @@ const Index = () => {
         onViewChange={handleViewChange}
         onFindFreeSlots={handleFindFreeSlots}
       />
-      
+
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with users */}
         <UsersList
@@ -124,7 +133,7 @@ const Index = () => {
           onUserSelect={handleUserSelect}
           onSelectAll={handleSelectAllUsers}
         />
-        
+
         {/* Main calendar view */}
         <div className="flex-1 overflow-hidden flex">
           <div className={`flex-1 p-4 ${showFreeSlotFinder ? 'w-2/3' : 'w-full'} overflow-hidden transition-all`}>
@@ -134,12 +143,12 @@ const Index = () => {
                 users={users.filter(user => selectedUsers.includes(user.id))}
                 events={events}
                 hourHeight={70}
-                onAddEvent={handleAddEvent}
+                onAddEvent={(userId, start, end) => handleAddEvent([userId], start, end)}
                 onEditEvent={handleEditEvent}
               />
             )}
           </div>
-          
+
           {/* Free slot finder panel */}
           {showFreeSlotFinder && (
             <div className="w-1/3 p-4 overflow-y-auto animate-fade-in">
@@ -154,7 +163,7 @@ const Index = () => {
           )}
         </div>
       </div>
-      
+
       {/* Event dialog */}
       <EventDialog
         event={selectedEvent}

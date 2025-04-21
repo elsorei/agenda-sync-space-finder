@@ -38,71 +38,104 @@ const EventDialog = ({
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
-  
+  // Multi-selezione degli utenti invitati
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (event) {
       setTitle(event.title);
       setDescription(event.description || "");
       setStartTime(event.start);
       setEndTime(event.end);
+      setSelectedUserIds(event.userIds || []);
     } else {
       resetForm();
     }
   }, [event]);
-  
+
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setStartTime(null);
     setEndTime(null);
+    setSelectedUserIds([]);
   };
-  
+
   const handleSave = () => {
-    if (!event || !startTime || !endTime) return;
-    
+    if (!startTime || !endTime || selectedUserIds.length === 0) return;
+
     const updatedEvent: Event = {
-      ...event,
+      id: event?.id || `new-${Date.now()}`,
       title,
       description,
       start: startTime,
       end: endTime,
+      userIds: selectedUserIds,
+      color: event?.color || "#9b87f5",
     };
-    
+
     onSave(updatedEvent);
     onClose();
   };
-  
+
   const handleDelete = () => {
     if (event && onDelete) {
       onDelete(event.id);
       onClose();
     }
   };
-  
-  const user = users.find(u => event?.userId === u.id);
-  
-  if (!event || !startTime || !endTime) return null;
-  
+
+  // Funzione per selezione/deselezione utenti invitati
+  const handleToggleUser = (userId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  if (!isOpen) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {event.id.startsWith("new-") ? "Nuovo evento" : "Modifica evento"}
+            {event?.id?.startsWith("new-") ? "Nuovo evento" : "Modifica evento"}
           </DialogTitle>
           <DialogDescription>
-            {format(event.start, "EEEE d MMMM yyyy")}
+            {(event?.start || startTime) &&
+              format(event?.start || startTime!, "EEEE d MMMM yyyy")}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
-          {user && (
-            <div className="flex items-center gap-2 mb-2">
-              <Label>Utente:</Label>
-              <UserAvatar user={user} showName />
+          {/* Selezione multipla utenti */}
+          <div className="flex flex-col gap-1 mb-2">
+            <Label>Invitati:</Label>
+            <div className="flex flex-wrap gap-2">
+              {users.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  className={
+                    "flex items-center gap-1 border rounded-md px-2 py-1 focus:outline-none transition-all " +
+                    (selectedUserIds.includes(u.id)
+                      ? "bg-primary text-primary-foreground border-primary font-semibold shadow-sm animate-fade-in"
+                      : "bg-muted text-foreground border-muted-foreground/30 hover:bg-accent")
+                  }
+                  onClick={() => handleToggleUser(u.id)}
+                >
+                  <UserAvatar user={u} size="sm" />
+                  <span className="text-xs">{u.name}</span>
+                </button>
+              ))}
             </div>
-          )}
-          
+            {selectedUserIds.length === 0 && (
+              <span className="text-xs text-destructive mt-1">Selezionare almeno un invitato</span>
+            )}
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">
               Titolo
@@ -114,31 +147,35 @@ const EventDialog = ({
               className="col-span-3"
             />
           </div>
-          
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="start" className="text-right">
               Inizio
             </Label>
             <div className="col-span-3">
-              <TimePickerDemo 
-                date={startTime} 
-                setDate={setStartTime} 
-              />
+              {startTime && (
+                <TimePickerDemo
+                  date={startTime}
+                  setDate={setStartTime}
+                />
+              )}
             </div>
           </div>
-          
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="end" className="text-right">
               Fine
             </Label>
             <div className="col-span-3">
-              <TimePickerDemo 
-                date={endTime} 
-                setDate={setEndTime} 
-              />
+              {endTime && (
+                <TimePickerDemo
+                  date={endTime}
+                  setDate={setEndTime}
+                />
+              )}
             </div>
           </div>
-          
+
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="description" className="text-right">
               Descrizione
@@ -152,11 +189,11 @@ const EventDialog = ({
             />
           </div>
         </div>
-        
+
         <DialogFooter className="flex justify-between">
-          {!event.id.startsWith("new-") && onDelete && (
-            <Button 
-              variant="destructive" 
+          {event && !event.id.startsWith("new-") && onDelete && (
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               type="button"
             >

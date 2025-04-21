@@ -6,9 +6,11 @@ export interface User {
   color: string;
 }
 
+// Cambia: l’evento ora può appartenere a più utenti tramite userIds
 export interface Event {
   id: string;
-  userId: string;
+  // userId: string; // RIMOSSO
+  userIds: string[]; // AGGIUNTO: utenti invitati all’evento
   title: string;
   description?: string;
   start: Date;
@@ -27,7 +29,7 @@ export interface CalendarViewProps {
   date: Date;
   users: User[];
   events: Event[];
-  onAddEvent?: (userId: string, start: Date, end: Date) => void;
+  onAddEvent?: (userIds: string[], start: Date, end: Date) => void;
   onEditEvent?: (event: Event) => void;
   onDeleteEvent?: (eventId: string) => void;
 }
