@@ -23,6 +23,7 @@ const DayView = ({
   const dayStart = startOfDay(date);
   
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Solo se il click è direttamente sul background, non su un elemento figlio
     if (!containerRef.current || !onAddEvent || e.target !== e.currentTarget) return;
     
     const rect = containerRef.current.getBoundingClientRect();
@@ -47,7 +48,10 @@ const DayView = ({
     }
   };
 
-  const handleTimeSlotClick = (timeString: string) => {
+  const handleTimeSlotClick = (e: React.MouseEvent, timeString: string) => {
+    // Ferma la propagazione dell'evento per evitare che il click raggiunga il background
+    e.stopPropagation();
+    
     if (!onAddEvent) return;
     
     // Parse the time string (format: "HH:MM")
@@ -81,7 +85,10 @@ const DayView = ({
           borderLeft: `3px solid ${event.color}`,
           zIndex
         }}
-        onClick={() => onEditEvent && onEditEvent(event)}
+        onClick={(e) => {
+          e.stopPropagation(); // Impedisci click sul background
+          onEditEvent && onEditEvent(event);
+        }}
       >
         <div className="flex items-start justify-between h-full">
           <div className="overflow-hidden">
@@ -143,7 +150,7 @@ const DayView = ({
                   )}
                   <button 
                     className="absolute left-0 top-0 w-full h-full opacity-0 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
-                    onClick={() => handleTimeSlotClick(timeStr)}
+                    onClick={(e) => handleTimeSlotClick(e, timeStr)}
                   />
                 </div>
               );
