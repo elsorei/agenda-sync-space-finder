@@ -1,7 +1,8 @@
+
 import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
-import { filterEventsForUser, formatTime, getEventStyle } from "@/utils/timeUtils";
+import { formatTime, getEventStyle } from "@/utils/timeUtils";
 import { startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -121,8 +122,10 @@ const DayView = ({
 
           {/* Event per ogni user */}
           {users.map((user, userIndex) => {
-            // mostra solo eventi in cui l’utente è invitato
-            const userEvents = events.filter((event) => event.userIds.includes(user.id));
+            // mostra solo eventi in cui l'utente è invitato
+            const userEvents = events.filter((event) => 
+              event.userIds && event.userIds.includes(user.id)
+            );
             return userEvents.map((event, eventIndex) =>
               renderEvent(event, userIndex * 100 + eventIndex, user.id)
             );

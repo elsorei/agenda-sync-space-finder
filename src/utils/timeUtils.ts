@@ -36,7 +36,7 @@ export const filterEventsForDate = (events: Event[], date: Date): Event[] => {
 
 // Filter events for a specific user
 export const filterEventsForUser = (events: Event[], userId: string): Event[] => {
-  return events.filter(event => event.userId === userId);
+  return events.filter(event => event.userIds.includes(userId));
 };
 
 // Check if a time is occupied for a user
@@ -150,7 +150,7 @@ export const getEventStyle = (
 
 // Create a new empty event
 export const createEmptyEvent = (
-  userId: string,
+  userIds: string[],
   start: Date,
   durationMinutes: number = 60
 ): Event => {
@@ -158,7 +158,7 @@ export const createEmptyEvent = (
   
   return {
     id: `new-event-${Date.now()}`,
-    userId,
+    userIds,
     title: 'Nuovo evento',
     start,
     end,

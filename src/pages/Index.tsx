@@ -51,7 +51,7 @@ const Index = () => {
     }
   };
 
-  // Cambiato: gestisce adesso più utenti invitati!
+  // Gestisce adesso più utenti invitati
   const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
     const newEvent: Event = {
       id: `new-${Date.now()}`,
@@ -109,7 +109,7 @@ const Index = () => {
   };
 
   const handleCreateFromFreeSlot = (start: Date, end: Date, userIds: string[]) => {
-    // Quando creo da slot libero, posso selezionare gli utenti invitati!
+    // Quando creo da slot libero, posso selezionare gli utenti invitati
     if (userIds.length > 0) {
       handleAddEvent(userIds, start, end);
     }
@@ -143,7 +143,7 @@ const Index = () => {
                 users={users.filter(user => selectedUsers.includes(user.id))}
                 events={events}
                 hourHeight={70}
-                onAddEvent={(userId, start, end) => handleAddEvent([userId], start, end)}
+                onAddEvent={handleAddEvent}
                 onEditEvent={handleEditEvent}
               />
             )}

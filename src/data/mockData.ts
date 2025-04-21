@@ -43,7 +43,7 @@ export const generateMockEvents = (date: Date): Event[] => {
   return [
     {
       id: '1',
-      userId: '1',
+      userIds: ['1'],
       title: 'Riunione di team',
       description: 'Discussione su nuovi progetti',
       start: createTime(baseDate, 9),
@@ -52,7 +52,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '2',
-      userId: '1',
+      userIds: ['1'],
       title: 'Pranzo con cliente',
       start: createTime(baseDate, 12, 30),
       end: createTime(baseDate, 14),
@@ -60,7 +60,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '3',
-      userId: '1',
+      userIds: ['1'],
       title: 'Call con partner',
       start: createTime(baseDate, 16),
       end: createTime(baseDate, 17),
@@ -68,7 +68,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '4',
-      userId: '2',
+      userIds: ['2'],
       title: 'Sessione di formazione',
       start: createTime(baseDate, 10),
       end: createTime(baseDate, 11, 30),
@@ -76,7 +76,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '5',
-      userId: '2',
+      userIds: ['2'],
       title: 'Revisione documenti',
       start: createTime(baseDate, 14),
       end: createTime(baseDate, 16),
@@ -84,7 +84,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '6',
-      userId: '3',
+      userIds: ['3'],
       title: 'Progettazione UI',
       start: createTime(baseDate, 9, 30),
       end: createTime(baseDate, 12),
@@ -92,7 +92,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '7',
-      userId: '3',
+      userIds: ['3'],
       title: 'Sviluppo frontend',
       start: createTime(baseDate, 15),
       end: createTime(baseDate, 18),
@@ -100,7 +100,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '8',
-      userId: '4',
+      userIds: ['4'],
       title: 'Analisi dati',
       start: createTime(baseDate, 11),
       end: createTime(baseDate, 13),
@@ -108,7 +108,7 @@ export const generateMockEvents = (date: Date): Event[] => {
     },
     {
       id: '9',
-      userId: '4',
+      userIds: ['4'],
       title: 'Piano marketing',
       start: createTime(baseDate, 14, 30),
       end: createTime(baseDate, 15, 45),
@@ -119,15 +119,15 @@ export const generateMockEvents = (date: Date): Event[] => {
 
 // Create a new event
 export const createEvent = (
-  userId: string,
+  userIds: string[],
   title: string,
   start: Date,
   end: Date
 ): Event => {
-  const user = mockUsers.find(u => u.id === userId);
+  const user = mockUsers.find(u => u.id === userIds[0]);
   return {
     id: `event-${Date.now()}`,
-    userId,
+    userIds,
     title,
     start,
     end,
