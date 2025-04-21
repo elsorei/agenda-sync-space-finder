@@ -48,9 +48,9 @@ const DayView = ({
     }
   };
 
-  // Gestore unificato per click e touch
+  // Gestore unificato per click e touch che impedisce attivamente la propagazione
   const handleTimeSlotClick = (e: React.MouseEvent | React.TouchEvent, timeString: string) => {
-    // Ferma la propagazione dell'evento per evitare che il click raggiunga il background
+    // Ferma la propagazione dell'evento e previene il comportamento predefinito
     e.stopPropagation();
     e.preventDefault(); // Importante per dispositivi touch
     
@@ -130,7 +130,7 @@ const DayView = ({
         {/* Main calendar grid */}
         <div className="flex-1 relative" style={{ height: `${16 * hourHeight}px` }}>
           {/* Time indicators with half-hour slots */}
-          <div className="absolute left-0 top-0 w-full h-full">
+          <div className="absolute left-0 top-0 w-full h-full pointer-events-auto">
             {halfHourIntervals.map((timeStr, index) => {
               const isFullHour = timeStr.endsWith(":00");
               return (
@@ -151,20 +151,21 @@ const DayView = ({
                     </span>
                   )}
                   <button 
-                    className="absolute left-0 top-0 w-full h-full hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
+                    className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
                     style={{ touchAction: "manipulation" }}
                     onClick={(e) => handleTimeSlotClick(e, timeStr)}
                     onTouchStart={(e) => handleTimeSlotClick(e, timeStr)}
+                    aria-label={`Seleziona orario ${timeStr}`}
                   />
                 </div>
               );
             })}
           </div>
           
-          {/* Background for click handling */}
+          {/* Background for click handling - col z-index più basso per dare priorità ai click sui bottoni */}
           <div 
             ref={containerRef}
-            className="absolute left-0 top-0 w-full h-full touch-none"
+            className="absolute left-0 top-0 w-full h-full touch-none z-0"
             style={{ touchAction: "none" }}
             onClick={handleBackgroundClick}
           />
