@@ -21,7 +21,9 @@ export const FileAttachmentList = ({
   onRemove,
   onView 
 }: FileAttachmentListProps) => {
-  if (attachments.length === 0) {
+  console.log("Rendering FileAttachmentList with attachments:", attachments);
+  
+  if (!attachments || attachments.length === 0) {
     return <div className="text-sm text-muted-foreground">Nessun allegato</div>;
   }
 
@@ -54,7 +56,10 @@ export const FileAttachmentList = ({
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <span className="hover:underline cursor-pointer" onClick={() => onView && onView(file)}>
+            <span className="hover:underline cursor-pointer" onClick={() => {
+              console.log("Clicking view file:", file);
+              onView && onView(file);
+            }}>
               {file.name}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -66,7 +71,10 @@ export const FileAttachmentList = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => onView(file)}
+                onClick={() => {
+                  console.log("Clicking view button:", file);
+                  onView(file);
+                }}
                 className="h-6 w-6 text-blue-600"
                 title="Visualizza file"
               >

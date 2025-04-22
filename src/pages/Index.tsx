@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -23,13 +22,16 @@ const Index = () => {
   useEffect(() => {
     const mockEvents = generateMockEvents(currentDate);
     
-    // Assicuriamoci che gli eventi abbiano la proprietà attachments
+    // Assicuriamoci che gli eventi abbiano sempre la proprietà attachments
     const eventsWithAttachments = mockEvents.map(event => ({
       ...event,
       attachments: event.attachments || []
     }));
     
     setEvents(eventsWithAttachments);
+    
+    // Debug: Verifica che gli eventi abbiano l'array attachments
+    console.log("Eventi caricati:", eventsWithAttachments);
   }, [currentDate]);
 
   const handleDateChange = (date: Date) => {
@@ -58,7 +60,7 @@ const Index = () => {
     }
   };
 
-  // Gestisce l'aggiunta di eventi con un orario di inizio e fine specifico
+  // Funzione per aggiungere eventi
   const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
     const newEvent: Event = {
       id: `new-${Date.now()}`,
@@ -69,7 +71,7 @@ const Index = () => {
       userIds,
       color: "#9b87f5",
       type: 'impegno',
-      attachments: []
+      attachments: [] // Assicuriamoci che ogni nuovo evento abbia l'array attachments
     };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
@@ -87,15 +89,17 @@ const Index = () => {
     setIsEventDialogOpen(true);
   };
 
-  // Salva evento con più utenti: lo aggiunge a ogni utente invitato
+  // Salva evento con più utenti
   const handleSaveEvent = (updatedEvent: Event) => {
+    // Assicuriamoci che l'evento abbia sempre gli attachments
+    const eventWithAttachments = {
+      ...updatedEvent,
+      attachments: updatedEvent.attachments || []
+    };
+    
+    console.log("Salvataggio evento con allegati:", eventWithAttachments);
+    
     setEvents(prev => {
-      // Assicuriamoci che l'evento abbia sempre gli allegati
-      const eventWithAttachments = {
-        ...updatedEvent,
-        attachments: updatedEvent.attachments || []
-      };
-      
       // Nuovo evento
       if (eventWithAttachments.id.startsWith('new-')) {
         toast({
@@ -105,7 +109,7 @@ const Index = () => {
         // id reale
         return [...prev, { ...eventWithAttachments, id: `event-${Date.now()}` }];
       } else {
-        // Aggiornamento evento
+        // Aggiornamento evento - manteniamo gli allegati esistenti
         toast({
           title: "Evento aggiornato",
           description: `L'evento "${eventWithAttachments.title}" è stato aggiornato.`,
@@ -113,6 +117,7 @@ const Index = () => {
         return prev.map(e => e.id === eventWithAttachments.id ? eventWithAttachments : e);
       }
     });
+    
     setIsEventDialogOpen(false);
   };
 

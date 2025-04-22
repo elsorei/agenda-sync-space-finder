@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +80,7 @@ const EventDialog = ({
       userIds: selectedUserIds,
       color: event?.color || "#9b87f5",
       type: eventType,
+      attachments: event?.attachments || [], // Aggiungiamo l'array di attachments vuoto
     };
 
     onSave(updatedEvent);
