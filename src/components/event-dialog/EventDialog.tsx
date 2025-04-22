@@ -13,11 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Event, EventType } from "@/types";
+import { FileAttachment } from "@/types/files";
 import { format } from "date-fns";
 import { TimePickerDemo } from "@/components/TimePicker";
 import { UserSelection } from "./UserSelection";
 import { EventTypeSelection } from "./EventTypeSelection";
 import { EventDialogProps } from "./types";
+import { FileUpload } from "./FileUpload";
+import { FileAttachmentList } from "./FileAttachmentList";
+import { PaperclipIcon } from "lucide-react";
 
 const EventDialog = ({
   event,
@@ -33,6 +37,8 @@ const EventDialog = ({
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [eventType, setEventType] = useState<EventType>('impegno');
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -42,6 +48,7 @@ const EventDialog = ({
       setEndTime(event.end);
       setSelectedUserIds(event.userIds || []);
       setEventType(event.type || 'impegno');
+      setAttachments(event.attachments || []);
     } else {
       resetForm();
     }
@@ -54,6 +61,7 @@ const EventDialog = ({
     setEndTime(null);
     setSelectedUserIds([]);
     setEventType('impegno');
+    setAttachments([]);
   };
 
   const handleSave = () => {
@@ -68,6 +76,7 @@ const EventDialog = ({
       userIds: selectedUserIds,
       color: event?.color || "#9b87f5",
       type: eventType,
+      attachments: attachments,
     };
 
     onSave(updatedEvent);
@@ -87,6 +96,14 @@ const EventDialog = ({
         ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const handleAddAttachment = (file: FileAttachment) => {
+    setAttachments(prev => [...prev, file]);
+  };
+
+  const handleRemoveAttachment = (fileId: string) => {
+    setAttachments(prev => prev.filter(file => file.id !== fileId));
   };
 
   if (!isOpen) return null;
@@ -164,6 +181,39 @@ const EventDialog = ({
               className="col-span-3"
               rows={3}
             />
+          </div>
+
+          {/* File attachments section */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right">
+              Allegati
+            </Label>
+            <div className="col-span-3">
+              {/* List of attached files */}
+              <FileAttachmentList 
+                attachments={attachments} 
+                onRemove={handleRemoveAttachment} 
+              />
+              
+              {/* File upload button */}
+              {!showFileUpload ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2" 
+                  onClick={() => setShowFileUpload(true)}
+                >
+                  <PaperclipIcon className="h-4 w-4 mr-2" />
+                  Aggiungi allegato
+                </Button>
+              ) : (
+                <FileUpload 
+                  onFileUploaded={handleAddAttachment}
+                  onCancel={() => setShowFileUpload(false)}
+                  allowedTypes={['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg']}
+                />
+              )}
+            </div>
           </div>
         </div>
 
