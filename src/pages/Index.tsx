@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -19,11 +18,9 @@ const Index = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState<boolean>(false);
 
-  // Carica eventi per il giorno corrente
-  useEffect(() => {
+  // Aggiungi un metodo di refresh esplicito
+  const refreshEvents = () => {
     const mockEvents = generateMockEvents(currentDate);
-    
-    // Assicuriamoci che gli eventi abbiano sempre la proprietà attachments
     const eventsWithAttachments = mockEvents.map(event => ({
       ...event,
       attachments: event.attachments || []
@@ -31,8 +28,15 @@ const Index = () => {
     
     setEvents(eventsWithAttachments);
     
-    // Debug: Verifica che gli eventi abbiano l'array attachments
-    console.log("Eventi caricati:", eventsWithAttachments);
+    toast({
+      title: "Aggiornamento completato",
+      description: "Gli eventi sono stati aggiornati",
+    });
+  };
+
+  // Carica eventi per il giorno corrente
+  useEffect(() => {
+    refreshEvents(); // Chiama il refresh all'avvio
   }, [currentDate]);
 
   const handleDateChange = (date: Date) => {
@@ -168,6 +172,7 @@ const Index = () => {
     }
   };
 
+  // Aggiungi il metodo di refresh come proprietà
   return (
     <div className="flex flex-col bg-background h-[calc(100vh-64px)] lg:h-screen">
       <CalendarHeader
@@ -176,6 +181,7 @@ const Index = () => {
         view={calendarView}
         onViewChange={handleViewChange}
         onFindFreeSlots={handleFindFreeSlots}
+        onRefresh={refreshEvents} // Passa il metodo di refresh
       />
 
       <div className="flex-1 flex overflow-hidden">
