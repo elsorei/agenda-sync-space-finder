@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -61,7 +62,7 @@ const Index = () => {
       userIds,
       color: "#9b87f5",
       type: 'impegno',
-      attachments: [] // Inizialmente senza allegati
+      attachments: []
     };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
@@ -117,7 +118,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background h-[calc(100vh-64px)] lg:h-screen">
       <CalendarHeader
         date={currentDate}
         onDateChange={handleDateChange}
@@ -126,14 +127,16 @@ const Index = () => {
         onFindFreeSlots={handleFindFreeSlots}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
         {/* Left sidebar with users */}
-        <UsersList
-          users={users}
-          selectedUsers={selectedUsers}
-          onUserSelect={handleUserSelect}
-          onSelectAll={handleSelectAllUsers}
-        />
+        <div className="border-r w-[250px] hidden lg:block">
+          <UsersList
+            users={users}
+            selectedUsers={selectedUsers}
+            onUserSelect={handleUserSelect}
+            onSelectAll={handleSelectAllUsers}
+          />
+        </div>
 
         {/* Main calendar view */}
         <div className="flex-1 overflow-hidden flex">
