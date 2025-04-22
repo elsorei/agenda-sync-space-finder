@@ -24,7 +24,7 @@ const FreeSlotFinder = ({
       return;
     }
     
-    const slots = findCommonFreeSlots(selectedUsers, events, date);
+    const slots = findCommonFreeSlots(users, events, date, selectedUsers);
     // Filter for business hours (8am-7pm)
     const businessHoursSlots = slots.filter(slot => {
       const hour = slot.start.getHours();
@@ -33,7 +33,7 @@ const FreeSlotFinder = ({
     
     setFreeSlots(businessHoursSlots);
     setSelectedSlot(null);
-  }, [selectedUsers, events, date]);
+  }, [selectedUsers, events, date, users]);
   
   const handleSlotClick = (slot: TimeSlot) => {
     setSelectedSlot(slot);

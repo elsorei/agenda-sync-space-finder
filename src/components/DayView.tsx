@@ -1,8 +1,9 @@
+
 import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
 import { formatTime, getEventStyle, getDayViewHalfHourIntervals } from "@/utils/timeUtils";
-import { startOfDay, addMinutes } from "date-fns";
+import { startOfDay, addMinutes, format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const DayView = ({ 
@@ -20,7 +21,7 @@ const DayView = ({
   const regularEvents = events.filter(event => event.type !== 'promemoria');
 
   // Get half-hour intervals for the day view
-  const halfHourIntervals = getDayViewHalfHourIntervals();
+  const halfHourIntervals = getDayViewHalfHourIntervals(date);
   
   // Generate the current day's start time
   const dayStart = startOfDay(date);
@@ -76,7 +77,7 @@ const DayView = ({
   };
   
   const renderEvent = (event: Event, zIndex: number, mainUserId: string) => {
-    const { top, height } = getEventStyle(event, hourHeight, startOfDay(date));
+    const eventStyle = getEventStyle(event, hourHeight);
     const user = users.find(u => u.id === mainUserId);
 
     return (
@@ -87,8 +88,8 @@ const DayView = ({
           event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400"
         )}
         style={{
-          top: event.type === 'promemoria' ? 'auto' : `${top}px`,
-          height: `${height}px`,
+          top: event.type === 'promemoria' ? 'auto' : eventStyle.top,
+          height: eventStyle.height,
           backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}20`,
           borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
           zIndex
@@ -109,13 +110,15 @@ const DayView = ({
             <div className="text-xs opacity-70 truncate">
               {formatTime(event.start)} - {formatTime(event.end)}
             </div>
-            {height > 60 && event.description && (
+            {/* Use a number check directly instead of comparing height as a string */}
+            {parseInt(eventStyle.height.toString()) > 60 && event.description && (
               <div className="text-xs mt-1 line-clamp-2 opacity-70">
                 {event.description}
               </div>
             )}
           </div>
-          {height > 50 && user && (
+          {/* Use a number check directly instead of comparing height as a string */}
+          {parseInt(eventStyle.height.toString()) > 50 && user && (
             <UserAvatar user={user} size="sm" />
           )}
         </div>
@@ -159,11 +162,12 @@ const DayView = ({
 
           {/* Time indicators with half-hour slots */}
           <div className="absolute left-0 top-0 w-full h-full pointer-events-auto">
-            {halfHourIntervals.map((timeStr, index) => {
+            {halfHourIntervals.map((interval, index) => {
+              const timeStr = format(interval, "HH:mm");
               const isFullHour = timeStr.endsWith(":00");
               return (
                 <div 
-                  key={timeStr} 
+                  key={index} 
                   className={cn(
                     "absolute left-0 w-full flex items-center",
                     isFullHour ? "border-t border-gray-200" : "border-t border-gray-100"
