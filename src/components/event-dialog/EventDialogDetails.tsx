@@ -23,6 +23,7 @@ interface EventDialogDetailsProps {
   setEndTime: (date: Date) => void;
   description: string;
   setDescription: (value: string) => void;
+  isReadOnly?: boolean;
 }
 
 export const EventDialogDetails = ({
@@ -38,15 +39,21 @@ export const EventDialogDetails = ({
   endTime,
   setEndTime,
   description,
-  setDescription
+  setDescription,
+  isReadOnly = false
 }: EventDialogDetailsProps) => {
   return (
     <div className="space-y-4">
-      <EventTypeSelection value={eventType} onChange={setEventType} />
+      <EventTypeSelection 
+        value={eventType} 
+        onChange={setEventType} 
+        disabled={isReadOnly}
+      />
       <UserSelection
         users={users}
         selectedUserIds={selectedUserIds}
         onToggleUser={onToggleUser}
+        isReadOnly={isReadOnly}
       />
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="title" className="text-right">
@@ -57,6 +64,7 @@ export const EventDialogDetails = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="col-span-3"
+          readOnly={isReadOnly}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -68,6 +76,7 @@ export const EventDialogDetails = ({
             <TimePickerDemo
               date={startTime}
               setDate={setStartTime}
+              disabled={isReadOnly}
             />
           )}
         </div>
@@ -81,6 +90,7 @@ export const EventDialogDetails = ({
             <TimePickerDemo
               date={endTime}
               setDate={setEndTime}
+              disabled={isReadOnly}
             />
           )}
         </div>
@@ -95,6 +105,7 @@ export const EventDialogDetails = ({
           onChange={(e) => setDescription(e.target.value)}
           className="col-span-3"
           rows={3}
+          readOnly={isReadOnly}
         />
       </div>
     </div>

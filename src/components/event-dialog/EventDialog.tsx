@@ -16,38 +16,88 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
   const [startTime, setStartTime] = useState<Date | null>(event?.start || null);
   const [endTime, setEndTime] = useState<Date | null>(event?.end || null);
   const [attachments, setAttachments] = useState(event?.attachments || []);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Sincronizza stati locali se l'evento cambia
   useEffect(() => {
-    setTitle(event?.title || "");
-    setDescription(event?.description || "");
-    setEventType(event?.type || "impegno");
-    setSelectedUserIds(event?.userIds || []);
-    setStartTime(event?.start || null);
-    setEndTime(event?.end || null);
-    setAttachments(event?.attachments || []);
+    if (event) {
+      console.log("EventDialog ricevuto evento:", event.id, "con allegati:", event.attachments?.length || 0);
+      setTitle(event.title || "");
+      setDescription(event.description || "");
+      setEventType(event.type || "impegno");
+      setSelectedUserIds(event.userIds || []);
+      setStartTime(event.start || null);
+      setEndTime(event.end || null);
+      setAttachments(event.attachments || []);
+      setIsEditMode(false); // Inizia in modalità visualizzazione
+    }
   }, [event]);
 
   const onToggleUser = (userId: string) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+        variant: "default",
+      });
+      return;
+    }
+    
     setSelectedUserIds((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   };
 
   const handleAddAttachment = (file: typeof attachments[number]) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+        variant: "default",
+      });
+      return;
+    }
+    
     setAttachments((prev) => [...prev, file]);
   };
 
   const handleRemoveAttachment = (id: string) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+        variant: "default",
+      });
+      return;
+    }
+    
     setAttachments((prev) => prev.filter((file) => file.id !== id));
   };
 
   const handleViewFile = (file: typeof attachments[number]) => {
-    // Apri il file in una nuova finestra o scheda
-    window.open(file.url, "_blank");
+    // Apri il file in una nuova finestra o scheda - possiamo permetterlo anche in modalità sola lettura
+    if (file.url) {
+      window.open(file.url, "_blank");
+    } else {
+      toast({
+        title: "Errore",
+        description: "URL del file non disponibile",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSave = () => {
+    if (!isEditMode) {
+      // Abilitiamo la modalità modifica se non lo è già
+      setIsEditMode(true);
+      toast({
+        title: "Modalità modifica",
+        description: "Ora puoi modificare l'evento",
+      });
+      return;
+    }
+
     if (!startTime || !endTime) {
       toast({
         title: "Errore",
@@ -74,25 +124,54 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       return;
     }
 
+    // Creazione di una copia profonda di tutti i dati, per evitare riferimenti
     const updatedEvent = {
       ...event,
+      id: event?.id || `new-${Date.now()}`,
       title,
       description,
       type: eventType,
-      userIds: selectedUserIds,
-      start: startTime,
-      end: endTime,
-      attachments,
+      userIds: [...selectedUserIds],
+      start: new Date(startTime.getTime()),
+      end: new Date(endTime.getTime()),
+      attachments: attachments.map(att => ({...att})), // Deep copy degli allegati
     };
 
+    console.log("Salvataggio evento con allegati:", updatedEvent.attachments);
+    
     onSave(updatedEvent);
+    setIsEditMode(false);
+  };
+
+  const handleCancel = () => {
+    if (isEditMode) {
+      // Ricarica i dati originali dell'evento
+      if (event) {
+        setTitle(event.title || "");
+        setDescription(event.description || "");
+        setEventType(event.type || "impegno");
+        setSelectedUserIds(event.userIds || []);
+        setStartTime(event.start || null);
+        setEndTime(event.end || null);
+        setAttachments(event.attachments || []);
+      }
+      setIsEditMode(false);
+      toast({
+        title: "Modifiche annullate",
+        description: "Le modifiche sono state annullate",
+      });
+    } else {
+      onClose();
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{event ? "Modifica evento" : "Nuovo evento"}</DialogTitle>
+          <DialogTitle>
+            {!event ? "Nuovo evento" : isEditMode ? "Modifica evento" : "Dettagli evento"}
+          </DialogTitle>
         </DialogHeader>
 
         <EventDialogDetails
@@ -109,6 +188,7 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
           setEndTime={setEndTime}
           description={description}
           setDescription={setDescription}
+          isReadOnly={!isEditMode && !!event}
         />
 
         <div className="mt-4">
@@ -117,21 +197,24 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
             onAddAttachment={handleAddAttachment}
             onRemoveAttachment={handleRemoveAttachment}
             onViewFile={handleViewFile}
+            isReadOnly={!isEditMode && !!event}
           />
         </div>
 
         <DialogFooter className="flex justify-between">
-          {event && onDelete && (
+          {event && !event.id.startsWith("new-") && onDelete && isEditMode && (
             <Button variant="destructive" onClick={() => onDelete(event.id)}>
               Elimina
             </Button>
           )}
 
           <div className="ml-auto flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Annulla
+            <Button variant="outline" onClick={handleCancel}>
+              {isEditMode ? "Annulla" : "Chiudi"}
             </Button>
-            <Button onClick={handleSave}>Salva</Button>
+            <Button onClick={handleSave}>
+              {isEditMode ? "Salva" : "Modifica"}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -140,4 +223,3 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
 };
 
 export default EventDialog;
-

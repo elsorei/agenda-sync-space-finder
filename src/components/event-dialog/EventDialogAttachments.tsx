@@ -12,13 +12,15 @@ interface EventDialogAttachmentsProps {
   onAddAttachment: (file: FileAttachment) => void;
   onRemoveAttachment: (id: string) => void;
   onViewFile: (file: FileAttachment) => void;
+  isReadOnly?: boolean;
 }
 
 export const EventDialogAttachments = ({
   attachments,
   onAddAttachment,
   onRemoveAttachment,
-  onViewFile
+  onViewFile,
+  isReadOnly = false
 }: EventDialogAttachmentsProps) => {
   const [showFileUpload, setShowFileUpload] = useState(false);
 
@@ -26,7 +28,7 @@ export const EventDialogAttachments = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Allegati</h3>
-        {!showFileUpload && (
+        {!showFileUpload && !isReadOnly && (
           <Button
             variant="outline"
             size="sm"
@@ -37,7 +39,7 @@ export const EventDialogAttachments = ({
           </Button>
         )}
       </div>
-      {showFileUpload && (
+      {showFileUpload && !isReadOnly && (
         <FileUpload
           onFileUploaded={(file) => {
             onAddAttachment(file);

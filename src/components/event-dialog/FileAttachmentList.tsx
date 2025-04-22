@@ -48,11 +48,14 @@ export const FileAttachmentList = ({
   };
 
   const handleViewFile = (file: FileAttachment) => {
-    console.log("Clicking view file:", file);
+    console.log("Visualizzazione allegato:", file.name);
     if (onView) {
-      // Create a deep copy of the file object to completely isolate it
-      const fileClone = JSON.parse(JSON.stringify(file));
-      onView(fileClone);
+      // Apriamo direttamente l'URL invece di passare l'oggetto file
+      if (file.url) {
+        window.open(file.url, "_blank");
+      } else {
+        console.error("URL del file non disponibile:", file);
+      }
     }
   };
 

@@ -80,35 +80,32 @@ const Index = () => {
 
   // Edit event - ensuring to create a deep copy of the event to break any references
   const handleEditEvent = (event: Event) => {
-    // Assicuriamoci che l'evento abbia la proprietà attachments e che sia una copia profonda
-    const eventWithAttachments = JSON.parse(JSON.stringify({
-      ...event,
-      attachments: event.attachments || []
-    }));
+    // Crea una copia profonda dell'evento per evitare modifiche accidentali
+    const eventCopy = structuredClone(event);
     
-    // Riconverti le date da stringhe a oggetti Date
-    eventWithAttachments.start = new Date(eventWithAttachments.start);
-    eventWithAttachments.end = new Date(eventWithAttachments.end);
+    // Assicurati che le date siano oggetti Date
+    eventCopy.start = new Date(eventCopy.start);
+    eventCopy.end = new Date(eventCopy.end);
     
-    console.log("Editing event:", eventWithAttachments.id, eventWithAttachments.title);
-    console.log("Event attachments before edit:", eventWithAttachments.attachments);
+    // Log di debug
+    console.log("Editing event:", eventCopy.id, eventCopy.title);
+    console.log("Event attachments before edit:", eventCopy.attachments);
     
-    setSelectedEvent(eventWithAttachments);
+    setSelectedEvent(eventCopy);
     setIsEventDialogOpen(true);
   };
 
   // Salva evento preservando gli allegati
   const handleSaveEvent = (updatedEvent: Event) => {
-    // Use deep clone to ensure we're not modifying the original object by reference
-    const eventToSave = {
-      ...updatedEvent,
-      attachments: updatedEvent.attachments || [],
-      // Assicuriamoci che le date siano oggetti Date
-      start: updatedEvent.start instanceof Date ? updatedEvent.start : new Date(updatedEvent.start),
-      end: updatedEvent.end instanceof Date ? updatedEvent.end : new Date(updatedEvent.end)
-    };
+    console.log("Salvataggio evento:", updatedEvent.id);
+    console.log("Allegati prima del salvataggio:", updatedEvent.attachments?.length || 0);
     
-    console.log("Salvataggio evento con allegati:", eventToSave);
+    // Creiamo una copia profonda usando structuredClone per isolare completamente l'oggetto
+    const eventToSave = structuredClone(updatedEvent);
+    
+    // Assicuriamoci che le date siano oggetti Date
+    eventToSave.start = new Date(eventToSave.start);
+    eventToSave.end = new Date(eventToSave.end);
     
     setEvents(prev => {
       // Nuovo evento
@@ -123,7 +120,7 @@ const Index = () => {
           id: `event-${Date.now()}` 
         }];
       } else {
-        // Aggiornamento evento - manteniamo gli allegati esistenti
+        // Aggiornamento evento
         toast({
           title: "Evento aggiornato",
           description: `L'evento "${eventToSave.title}" è stato aggiornato.`,
@@ -146,6 +143,7 @@ const Index = () => {
       description: "L'evento è stato eliminato con successo.",
       variant: "destructive",
     });
+    setIsEventDialogOpen(false);
   };
 
   const handleFindFreeSlots = () => {
