@@ -1,4 +1,3 @@
-
 // Aggiorna il tipo Event per includere gli allegati
 import { FileAttachment } from './files';
 
@@ -13,7 +12,7 @@ export interface Event {
   userIds: string[];
   color: string;
   type: EventType;
-  attachments?: FileAttachment[];
+  attachments: FileAttachment[]; // Non più opzionale
 }
 
 export interface User {

@@ -90,21 +90,27 @@ const Index = () => {
   // Salva evento con più utenti: lo aggiunge a ogni utente invitato
   const handleSaveEvent = (updatedEvent: Event) => {
     setEvents(prev => {
+      // Assicuriamoci che l'evento abbia sempre gli allegati
+      const eventWithAttachments = {
+        ...updatedEvent,
+        attachments: updatedEvent.attachments || []
+      };
+      
       // Nuovo evento
-      if (updatedEvent.id.startsWith('new-')) {
+      if (eventWithAttachments.id.startsWith('new-')) {
         toast({
           title: "Evento creato",
-          description: `L'evento "${updatedEvent.title}" è stato creato.`,
+          description: `L'evento "${eventWithAttachments.title}" è stato creato.`,
         });
         // id reale
-        return [...prev, { ...updatedEvent, id: `event-${Date.now()}` }];
+        return [...prev, { ...eventWithAttachments, id: `event-${Date.now()}` }];
       } else {
         // Aggiornamento evento
         toast({
           title: "Evento aggiornato",
-          description: `L'evento "${updatedEvent.title}" è stato aggiornato.`,
+          description: `L'evento "${eventWithAttachments.title}" è stato aggiornato.`,
         });
-        return prev.map(e => e.id === updatedEvent.id ? updatedEvent : e);
+        return prev.map(e => e.id === eventWithAttachments.id ? eventWithAttachments : e);
       }
     });
     setIsEventDialogOpen(false);

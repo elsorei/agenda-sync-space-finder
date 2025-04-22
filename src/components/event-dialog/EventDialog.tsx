@@ -119,7 +119,7 @@ const EventDialog = ({
   };
 
   const handleViewFile = (file: FileAttachment) => {
-    // Apri il file in una nuova finestra
+    // Apri il file in una nuova finestra senza modificare gli allegati
     window.open(file.url, '_blank');
     toast({
       title: "File aperto",
@@ -247,42 +247,11 @@ const EventDialog = ({
                 {attachments.length === 0 ? (
                   <div className="text-sm text-muted-foreground">Nessun allegato</div>
                 ) : (
-                  attachments.map((file) => (
-                    <div 
-                      key={file.id} 
-                      className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <FileIcon className="h-4 w-4" />
-                        <span className="hover:underline">
-                          {file.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleViewFile(file)}
-                          className="h-6 w-6 text-blue-600"
-                          title="Visualizza file"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleRemoveAttachment(file.id)}
-                          className="h-6 w-6 text-destructive"
-                          title="Rimuovi allegato"
-                        >
-                          <FileIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
+                  <FileAttachmentList 
+                    attachments={attachments}
+                    onRemove={handleRemoveAttachment}
+                    onView={handleViewFile}
+                  />
                 )}
               </div>
             </div>

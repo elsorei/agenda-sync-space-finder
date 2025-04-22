@@ -54,13 +54,9 @@ export const FileAttachmentList = ({
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <button 
-              type="button"
-              className="hover:underline cursor-pointer text-blue-600"
-              onClick={() => onView && onView(file)}
-            >
+            <span className="hover:underline cursor-pointer" onClick={() => onView && onView(file)}>
               {file.name}
-            </button>
+            </span>
             <span className="text-xs text-muted-foreground">
               {formatFileSize(file.size)}
             </span>
@@ -81,7 +77,7 @@ export const FileAttachmentList = ({
               variant="ghost" 
               size="icon" 
               onClick={() => onRemove(file.id)}
-              className="h-6 w-6"
+              className="h-6 w-6 text-destructive"
               title="Rimuovi allegato"
             >
               <FileX className="h-4 w-4" />
