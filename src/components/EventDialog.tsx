@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "./UserAvatar";
-import { Event, User, EventType, FileAttachment } from "@/types";
+import { Event, User, EventType } from "@/types";
+import { FileAttachment } from "@/types/files"; // Fixed import path
 import { format } from "date-fns";
 import { TimePickerDemo } from "./TimePicker";
 import {
