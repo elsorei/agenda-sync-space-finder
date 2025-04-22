@@ -1,175 +1,213 @@
-import { Event, TimeSlot, User } from '../types';
-import { 
-  addMinutes, 
-  areIntervalsOverlapping, 
-  compareAsc, 
-  eachMinuteOfInterval, 
-  endOfDay, 
-  format, 
-  isSameDay, 
-  startOfDay 
-} from 'date-fns';
 
-// Format time as HH:MM
-export const formatTime = (date: Date): string => {
-  return format(date, 'HH:mm');
+import { Event, TimeSlot, User } from "@/types";
+import {
+  addHours,
+  addMinutes,
+  differenceInMinutes,
+  eachHourOfInterval,
+  endOfDay,
+  format,
+  formatDuration,
+  getHours,
+  getMinutes,
+  isAfter,
+  isBefore,
+  isSameDay,
+  isWithinInterval,
+  startOfDay,
+} from "date-fns";
+import { it } from "date-fns/locale";
+
+export const HOURS_IN_DAY = 24;
+export const MINUTES_IN_HOUR = 60;
+export const WORKING_HOURS_START = 8; // 8:00
+export const WORKING_HOURS_END = 19; // 19:00
+
+// Formattazione della durata dell'evento (es. "1 ora 30 minuti")
+export const formatEventDuration = (start: Date, end: Date) => {
+  const durationInMinutes = differenceInMinutes(end, start);
+  
+  const hours = Math.floor(durationInMinutes / 60);
+  const minutes = durationInMinutes % 60;
+  
+  let result = "";
+  if (hours > 0) {
+    result += `${hours} ${hours === 1 ? "ora" : "ore"}`;
+  }
+  
+  if (minutes > 0) {
+    if (result.length > 0) result += " ";
+    result += `${minutes} ${minutes === 1 ? "minuto" : "minuti"}`;
+  }
+  
+  return result || "Meno di un minuto";
 };
 
-// Format date as DD/MM/YYYY
-export const formatDate = (date: Date): string => {
-  return format(date, 'dd/MM/yyyy');
+// Formatta un'ora (ad es. "9:30" o "14:00")
+export const formatTime = (date: Date) => {
+  return format(date, "HH:mm");
 };
 
-// Get hours for day view (typically 8:00 to 20:00)
-export const getDayViewHours = (): string[] => {
-  return Array.from({ length: 16 }, (_, i) => {
-    const hour = i + 7; // Start from 7:00
-    return `${hour.toString().padStart(2, '0')}:00`;
-  });
+// Formatta il tempo in formato relativo (es. "Oggi alle 14:30")
+export const formatTimeRelative = (date: Date) => {
+  if (isSameDay(date, new Date())) {
+    return `Oggi alle ${format(date, "HH:mm")}`;
+  }
+  return format(date, "EEEE d MMMM 'alle' HH:mm", { locale: it });
 };
 
-// Get half-hour intervals for day view (7:00, 7:30, 8:00, etc.)
-export const getDayViewHalfHourIntervals = (): string[] => {
-  return Array.from({ length: 31 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 7; // Start from 7:00
-    const minutes = i % 2 === 0 ? "00" : "30";
-    return `${hour.toString().padStart(2, '0')}:${minutes}`;
-  });
+// Calcola la posizione verticale basata sull'ora
+export const getPositionFromTime = (
+  date: Date,
+  hourHeight: number
+): number => {
+  const hours = getHours(date);
+  const minutes = getMinutes(date);
+  return (hours + minutes / MINUTES_IN_HOUR) * hourHeight;
 };
 
-// Filter events for a specific date
-export const filterEventsForDate = (events: Event[], date: Date): Event[] => {
-  return events.filter(event => isSameDay(event.start, date));
-};
-
-// Filter events for a specific user
-export const filterEventsForUser = (events: Event[], userId: string): Event[] => {
-  return events.filter(event => event.userIds && event.userIds.includes(userId));
-};
-
-// Check if a time is occupied for a user
-export const isTimeOccupied = (
-  time: Date,
-  userId: string,
-  events: Event[]
-): boolean => {
-  const userEvents = filterEventsForUser(events, userId);
-  return userEvents.some(event => time >= event.start && time < event.end);
-};
-
-// Find common free slots for multiple users
-export const findCommonFreeSlots = (
-  users: string[],
+// Trova slot liberi per un insieme di utenti e eventi
+export const findFreeSlots = (
+  users: User[],
   events: Event[],
   date: Date,
-  slotDuration: number = 30 // in minutes
+  selectedUserIds: string[] = []
 ): TimeSlot[] => {
+  // Se non sono selezionati utenti, non calcolare
+  if (selectedUserIds.length === 0) {
+    return [];
+  }
+
   const startTime = startOfDay(date);
   const endTime = endOfDay(date);
   
-  // Create 30-minute intervals for the day
-  const timeIntervals = eachMinuteOfInterval(
-    { start: startTime, end: endTime },
-    { step: slotDuration }
-  );
+  // Crea slot per ogni ora della giornata
+  const slots: TimeSlot[] = [];
+  const hourIntervals = eachHourOfInterval({ start: startTime, end: endTime });
   
-  // Initialize all slots as free
-  let slots: TimeSlot[] = timeIntervals
-    .slice(0, -1) // Exclude the last interval endpoint
-    .map((start, index) => ({
-      start,
-      end: timeIntervals[index + 1],
-      users: [],
-      isFree: true
-    }));
-  
-  // Mark slots as busy based on user events
-  users.forEach(userId => {
-    const userEvents = filterEventsForUser(events, userId);
-    
-    slots = slots.map(slot => {
-      const slotInterval = { start: slot.start, end: slot.end };
-      
-      const isBusy = userEvents.some(event => 
-        areIntervalsOverlapping(
-          slotInterval, 
-          { start: event.start, end: event.end }
-        )
-      );
-      
-      if (isBusy) {
-        return {
-          ...slot,
-          users: [...slot.users, userId],
-          isFree: false
-        };
-      }
-      
-      return slot;
+  for (let i = 0; i < hourIntervals.length - 1; i++) {
+    slots.push({
+      start: hourIntervals[i],
+      end: hourIntervals[i + 1],
+      userIds: [...selectedUserIds],
     });
-  });
-  
-  // Find free slots for all selected users
-  const freeSlots = slots.filter(slot => {
-    // Is this time slot free for all selected users?
-    return slot.users.length === 0;
-  });
-  
-  // Merge consecutive free slots
-  const mergedFreeSlots: TimeSlot[] = [];
-  let currentSlot: TimeSlot | null = null;
-  
-  freeSlots.forEach(slot => {
-    if (!currentSlot) {
-      currentSlot = { ...slot };
-    } else if (currentSlot.end.getTime() === slot.start.getTime()) {
-      // Merge with previous slot
-      currentSlot.end = slot.end;
-    } else {
-      // Push the current slot and start a new one
-      mergedFreeSlots.push(currentSlot);
-      currentSlot = { ...slot };
-    }
-  });
-  
-  // Don't forget the last slot
-  if (currentSlot) {
-    mergedFreeSlots.push(currentSlot);
   }
   
-  return mergedFreeSlots;
+  // Filtra eventi per gli utenti selezionati e per il giorno specificato
+  const relevantEvents = events.filter((event) => {
+    // Verifica se l'evento coinvolge almeno uno degli utenti selezionati
+    const hasSelectedUser = event.userIds.some((userId) =>
+      selectedUserIds.includes(userId)
+    );
+    
+    // Verifica se l'evento è nello stesso giorno
+    const isSameDate = isSameDay(event.start, date);
+    
+    return hasSelectedUser && isSameDate;
+  });
+  
+  // Rimuovi utenti dagli slot in base agli eventi
+  for (const event of relevantEvents) {
+    for (const slot of slots) {
+      // Se c'è sovrapposizione, rimuovi gli utenti dell'evento dallo slot
+      if (
+        (isWithinInterval(event.start, { start: slot.start, end: slot.end }) ||
+         isWithinInterval(event.end, { start: slot.start, end: slot.end }) ||
+         (isBefore(event.start, slot.start) && isAfter(event.end, slot.end)))
+      ) {
+        // Rimuovi gli utenti dell'evento da questo slot
+        slot.userIds = slot.userIds.filter(
+          (userId) => !event.userIds.includes(userId)
+        );
+      }
+    }
+  }
+  
+  return slots;
 };
 
-// Get position and height for an event in the day view
-export const getEventStyle = (
-  event: Event, 
-  hourHeight: number, 
-  dayStart: Date = startOfDay(event.start)
-) => {
-  const dayStartHours = dayStart.getHours();
-  const eventStartHours = event.start.getHours() + event.start.getMinutes() / 60;
-  const eventEndHours = event.end.getHours() + event.end.getMinutes() / 60;
+// Funzione per ottenere slot di tempo consigliati per una durata specificata
+export const getRecommendedSlots = (
+  slots: TimeSlot[],
+  durationInMinutes: number = 60,
+  startHour: number = WORKING_HOURS_START,
+  endHour: number = WORKING_HOURS_END
+): TimeSlot[] => {
+  // Filtriamo prima gli slot all'interno dell'orario di lavoro
+  const workingSlots = slots.filter((slot) => {
+    const slotHour = getHours(slot.start);
+    return slotHour >= startHour && slotHour < endHour;
+  });
   
-  const top = (eventStartHours - dayStartHours) * hourHeight;
-  const height = (eventEndHours - eventStartHours) * hourHeight;
+  const recommendedSlots: TimeSlot[] = [];
   
-  return { top, height };
+  // Raggruppa slot consecutivi con gli stessi utenti liberi
+  let currentGroup: TimeSlot[] = [];
+  let currentUserIds: string[] = [];
+  
+  for (let i = 0; i < workingSlots.length; i++) {
+    const slot = workingSlots[i];
+    
+    // Se è il primo slot o gli utenti sono gli stessi del gruppo corrente
+    if (
+      currentGroup.length === 0 ||
+      (
+        slot.userIds.length === currentUserIds.length &&
+        slot.userIds.every(id => currentUserIds.includes(id)) &&
+        currentUserIds.every(id => slot.userIds.includes(id))
+      )
+    ) {
+      currentGroup.push(slot);
+      currentUserIds = [...slot.userIds];
+    } else {
+      // Elabora il gruppo attuale se abbastanza lungo
+      const totalMinutes = differenceInMinutes(
+        currentGroup[currentGroup.length - 1].end,
+        currentGroup[0].start
+      );
+      
+      if (totalMinutes >= durationInMinutes && currentUserIds.length > 0) {
+        recommendedSlots.push({
+          start: currentGroup[0].start,
+          end: addMinutes(currentGroup[0].start, durationInMinutes),
+          userIds: currentUserIds,
+        });
+      }
+      
+      // Inizia un nuovo gruppo
+      currentGroup = [slot];
+      currentUserIds = [...slot.userIds];
+    }
+  }
+  
+  // Elabora l'ultimo gruppo
+  if (currentGroup.length > 0) {
+    const totalMinutes = differenceInMinutes(
+      currentGroup[currentGroup.length - 1].end,
+      currentGroup[0].start
+    );
+    
+    if (totalMinutes >= durationInMinutes && currentUserIds.length > 0) {
+      recommendedSlots.push({
+        start: currentGroup[0].start,
+        end: addMinutes(currentGroup[0].start, durationInMinutes),
+        userIds: currentUserIds,
+      });
+    }
+  }
+  
+  return recommendedSlots;
 };
 
-// Create a new empty event
-export const createEmptyEvent = (
-  userIds: string[],
-  start: Date,
-  durationMinutes: number = 60
-): Event => {
-  const end = addMinutes(start, durationMinutes);
-  
+// Crea un esempio di evento per uno slot di tempo
+export const createEventFromSlot = (slot: TimeSlot): Event => {
   return {
-    id: `new-event-${Date.now()}`,
-    userIds,
-    title: 'Nuovo evento',
-    start,
-    end,
-    type: 'impegno'
+    id: `new-${Date.now()}`,
+    title: "Nuovo evento",
+    start: slot.start,
+    end: slot.end,
+    userIds: slot.userIds,
+    color: "#9b87f5",
+    type: "impegno",
   };
 };

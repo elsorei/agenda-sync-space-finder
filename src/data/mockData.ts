@@ -1,145 +1,114 @@
-import { User, Event } from '../types';
-import { addHours, setHours, setMinutes, startOfDay } from 'date-fns';
 
-// Mock users
+import { Event, User, EventType } from "@/types";
+import { addDays, addHours, addMinutes, startOfDay, subHours } from "date-fns";
+
 export const mockUsers: User[] = [
   {
-    id: '1',
-    name: 'Mario Rossi',
-    avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=1',
-    color: '#3498db',
+    id: "user1",
+    name: "Mario Rossi",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    email: "mario.rossi@example.com",
+    color: "#9b87f5",
   },
   {
-    id: '2',
-    name: 'Giulia Bianchi',
-    avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=2',
-    color: '#e74c3c',
+    id: "user2",
+    name: "Giulia Bianchi",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    email: "giulia.bianchi@example.com",
+    color: "#7E69AB",
   },
   {
-    id: '3',
-    name: 'Luca Verdi',
-    avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=3',
-    color: '#2ecc71',
+    id: "user3",
+    name: "Antonio Verdi",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    email: "antonio.verdi@example.com",
+    color: "#33C3F0",
   },
   {
-    id: '4',
-    name: 'Sofia Ferrari',
-    avatar: 'https://api.dicebear.com/7.x/personas/svg?seed=4',
-    color: '#f39c12',
+    id: "user4",
+    name: "Francesca Neri",
+    avatar: "https://i.pravatar.cc/150?img=4",
+    email: "francesca.neri@example.com",
+    color: "#F97316",
   },
 ];
 
-// Helper function to create a date at a specific hour/minute
-const createTime = (date: Date, hour: number, minute: number = 0): Date => {
-  const newDate = new Date(date);
-  return setMinutes(setHours(newDate, hour), minute);
-};
-
-// Generate mock events for today
-export const generateMockEvents = (date: Date): Event[] => {
-  const baseDate = startOfDay(date);
-  
-  return [
-    {
-      id: '1',
-      userIds: ['1'],
-      title: 'Riunione di team',
-      description: 'Discussione su nuovi progetti',
-      start: createTime(baseDate, 9),
-      end: createTime(baseDate, 10, 30),
-      color: '#3498db',
-      type: 'impegno'
-    },
-    {
-      id: '2',
-      userIds: ['1'],
-      title: 'Pranzo con cliente',
-      start: createTime(baseDate, 12, 30),
-      end: createTime(baseDate, 14),
-      color: '#3498db',
-      type: 'appuntamento'
-    },
-    {
-      id: '3',
-      userIds: ['1'],
-      title: 'Call con partner',
-      start: createTime(baseDate, 16),
-      end: createTime(baseDate, 17),
-      color: '#3498db',
-      type: 'impegno'
-    },
-    {
-      id: '4',
-      userIds: ['2'],
-      title: 'Sessione di formazione',
-      start: createTime(baseDate, 10),
-      end: createTime(baseDate, 11, 30),
-      color: '#e74c3c',
-      type: 'impegno'
-    },
-    {
-      id: '5',
-      userIds: ['2'],
-      title: 'Revisione documenti',
-      start: createTime(baseDate, 14),
-      end: createTime(baseDate, 16),
-      color: '#e74c3c',
-      type: 'impegno'
-    },
-    {
-      id: '6',
-      userIds: ['3'],
-      title: 'Progettazione UI',
-      start: createTime(baseDate, 9, 30),
-      end: createTime(baseDate, 12),
-      color: '#2ecc71',
-      type: 'impegno'
-    },
-    {
-      id: '7',
-      userIds: ['3'],
-      title: 'Sviluppo frontend',
-      start: createTime(baseDate, 15),
-      end: createTime(baseDate, 18),
-      color: '#2ecc71',
-      type: 'impegno'
-    },
-    {
-      id: '8',
-      userIds: ['4'],
-      title: 'Analisi dati',
-      start: createTime(baseDate, 11),
-      end: createTime(baseDate, 13),
-      color: '#f39c12',
-      type: 'promemoria'
-    },
-    {
-      id: '9',
-      userIds: ['4'],
-      title: 'Piano marketing',
-      start: createTime(baseDate, 14, 30),
-      end: createTime(baseDate, 15, 45),
-      color: '#f39c12',
-      type: 'promemoria'
-    },
-  ];
-};
-
-// Create a new event
+// Funzione per generare un evento simulato
 export const createEvent = (
-  userIds: string[],
   title: string,
   start: Date,
-  end: Date
+  durationMinutes: number,
+  userIds: string[],
+  type: EventType = 'impegno',
+  color?: string
 ): Event => {
-  const user = mockUsers.find(u => u.id === userIds[0]);
+  const end = addMinutes(start, durationMinutes);
   return {
-    id: `event-${Date.now()}`,
-    userIds,
+    id: `event-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     title,
     start,
     end,
-    color: user?.color,
-    type: 'impegno'
+    userIds,
+    color: color || "#9b87f5",
+    type,
   };
+};
+
+// Helper per generare eventi casuali per un giorno specifico
+export const generateMockEvents = (date: Date): Event[] => {
+  const startDay = startOfDay(date);
+  const events: Event[] = [];
+
+  // Alcuni eventi predefiniti
+  events.push(
+    createEvent(
+      "Riunione di team",
+      addHours(startDay, 10),
+      60,
+      ["user1", "user2", "user3"],
+      'appuntamento'
+    )
+  );
+
+  events.push(
+    createEvent(
+      "Pranzo con cliente",
+      addHours(startDay, 13),
+      90,
+      ["user1", "user4"],
+      'appuntamento'
+    )
+  );
+
+  events.push(
+    createEvent(
+      "Revisione progetto",
+      addHours(startDay, 15),
+      45,
+      ["user2", "user3"],
+      'impegno'
+    )
+  );
+
+  events.push(
+    createEvent(
+      "Telefonata importante",
+      addHours(addDays(startDay, 1), 11),
+      30,
+      ["user1"],
+      'promemoria'
+    )
+  );
+
+  events.push(
+    createEvent(
+      "Sprint planning",
+      subHours(addDays(startDay, 1), 1),
+      120,
+      ["user1", "user2", "user3", "user4"],
+      'impegno'
+    )
+  );
+
+  return events;
 };

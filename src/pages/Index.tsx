@@ -5,9 +5,8 @@ import UsersList from "@/components/UsersList";
 import DayView from "@/components/DayView";
 import EventDialog from "@/components/event-dialog";
 import FreeSlotFinder from "@/components/FreeSlotFinder";
-import { mockUsers, generateMockEvents, createEvent } from "@/data/mockData";
+import { mockUsers, generateMockEvents } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
-import { addMinutes } from "date-fns";
 
 const Index = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -61,7 +60,8 @@ const Index = () => {
       end,
       userIds,
       color: "#9b87f5",
-      type: 'impegno' // Aggiungo il tipo di default
+      type: 'impegno',
+      attachments: [] // Inizialmente senza allegati
     };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
