@@ -86,6 +86,10 @@ const Index = () => {
       attachments: event.attachments || []
     }));
     
+    // Riconverti le date da stringhe a oggetti Date
+    eventWithAttachments.start = new Date(eventWithAttachments.start);
+    eventWithAttachments.end = new Date(eventWithAttachments.end);
+    
     console.log("Editing event:", eventWithAttachments.id, eventWithAttachments.title);
     console.log("Event attachments before edit:", eventWithAttachments.attachments);
     
@@ -96,34 +100,37 @@ const Index = () => {
   // Salva evento preservando gli allegati
   const handleSaveEvent = (updatedEvent: Event) => {
     // Use deep clone to ensure we're not modifying the original object by reference
-    const eventWithAttachments = JSON.parse(JSON.stringify({
+    const eventToSave = {
       ...updatedEvent,
-      attachments: updatedEvent.attachments || []
-    }));
+      attachments: updatedEvent.attachments || [],
+      // Assicuriamoci che le date siano oggetti Date
+      start: updatedEvent.start instanceof Date ? updatedEvent.start : new Date(updatedEvent.start),
+      end: updatedEvent.end instanceof Date ? updatedEvent.end : new Date(updatedEvent.end)
+    };
     
-    console.log("Salvataggio evento con allegati:", eventWithAttachments);
+    console.log("Salvataggio evento con allegati:", eventToSave);
     
     setEvents(prev => {
       // Nuovo evento
-      if (eventWithAttachments.id.startsWith('new-')) {
+      if (eventToSave.id.startsWith('new-')) {
         toast({
           title: "Evento creato",
-          description: `L'evento "${eventWithAttachments.title}" è stato creato.`,
+          description: `L'evento "${eventToSave.title}" è stato creato.`,
         });
         // id reale
         return [...prev, { 
-          ...eventWithAttachments, 
+          ...eventToSave, 
           id: `event-${Date.now()}` 
         }];
       } else {
         // Aggiornamento evento - manteniamo gli allegati esistenti
         toast({
           title: "Evento aggiornato",
-          description: `L'evento "${eventWithAttachments.title}" è stato aggiornato.`,
+          description: `L'evento "${eventToSave.title}" è stato aggiornato.`,
         });
         return prev.map(e => 
-          e.id === eventWithAttachments.id 
-            ? eventWithAttachments 
+          e.id === eventToSave.id 
+            ? eventToSave 
             : e
         );
       }

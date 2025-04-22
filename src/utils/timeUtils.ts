@@ -17,10 +17,14 @@ export const getDayViewHalfHourIntervals = (date: Date): Date[] => {
 
 // Calcola lo stile per un evento nella vista giornaliera
 export const getEventStyle = (event: Event, hourHeight: number): React.CSSProperties => {
-  const startHour = event.start.getHours();
-  const startMinute = event.start.getMinutes();
-  const endHour = event.end.getHours();
-  const endMinute = event.end.getMinutes();
+  // Assicurati che le date siano oggetti Date validi, non stringhe
+  const startDate = event.start instanceof Date ? event.start : new Date(event.start);
+  const endDate = event.end instanceof Date ? event.end : new Date(event.end);
+
+  const startHour = startDate.getHours();
+  const startMinute = startDate.getMinutes();
+  const endHour = endDate.getHours();
+  const endMinute = endDate.getMinutes();
 
   const top = (startHour * 60 + startMinute) * (hourHeight / 60);
   const height = (endHour * 60 + endMinute - startHour * 60 - startMinute) * (hourHeight / 60);
@@ -35,11 +39,15 @@ export const getEventStyle = (event: Event, hourHeight: number): React.CSSProper
 
 // Verifica se un evento si sovrappone a un'ora specifica
 export const eventOverlapsHour = (event: Event, hourDate: Date): boolean => {
+  // Assicurati che le date siano oggetti Date validi
+  const startDate = event.start instanceof Date ? event.start : new Date(event.start);
+  const endDate = event.end instanceof Date ? event.end : new Date(event.end);
+  
   const hourStart = hourDate;
   const hourEnd = addMinutes(hourDate, 59);
 
   return areIntervalsOverlapping(
-    { start: event.start, end: event.end },
+    { start: startDate, end: endDate },
     { start: hourStart, end: hourEnd }
   );
 };
@@ -72,12 +80,16 @@ export const findFreeSlots = (
     const slotEnd = addMinutes(currentTime, 30);
     
     // Controlla se questo slot si sovrappone a qualsiasi evento esistente
-    const overlapsWithEvent = relevantEvents.some((event) =>
-      areIntervalsOverlapping(
+    const overlapsWithEvent = relevantEvents.some((event) => {
+      // Assicurati che le date dell'evento siano oggetti Date validi
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+      
+      return areIntervalsOverlapping(
         { start: currentTime, end: slotEnd },
-        { start: event.start, end: event.end }
-      )
-    );
+        { start: eventStart, end: eventEnd }
+      );
+    });
 
     if (!overlapsWithEvent) {
       slots.push({
