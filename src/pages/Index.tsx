@@ -60,7 +60,8 @@ const Index = () => {
       start,
       end,
       userIds,
-      color: "#9b87f5"
+      color: "#9b87f5",
+      type: 'impegno' // Aggiungo il tipo di default
     };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
