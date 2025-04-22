@@ -21,7 +21,7 @@ export const FileAttachmentList = ({
   onRemove,
   onView 
 }: FileAttachmentListProps) => {
-  console.log("Rendering FileAttachmentList with attachments:", attachments);
+  console.log("Rendering FileAttachmentList with attachments:", attachments?.length || 0);
   
   if (!attachments || attachments.length === 0) {
     return <div className="text-sm text-muted-foreground">Nessun allegato</div>;
@@ -47,18 +47,6 @@ export const FileAttachmentList = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleViewFile = (file: FileAttachment) => {
-    console.log("Visualizzazione allegato:", file.name);
-    if (onView) {
-      // Apriamo direttamente l'URL invece di passare l'oggetto file
-      if (file.url) {
-        window.open(file.url, "_blank");
-      } else {
-        console.error("URL del file non disponibile:", file);
-      }
-    }
-  };
-
   return (
     <div className="space-y-2">
       {attachments.map((file) => (
@@ -68,7 +56,10 @@ export const FileAttachmentList = ({
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <span className="hover:underline cursor-pointer" onClick={() => handleViewFile(file)}>
+            <span 
+              className="hover:underline cursor-pointer" 
+              onClick={() => onView && onView(file)}
+            >
               {file.name}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -80,7 +71,7 @@ export const FileAttachmentList = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => handleViewFile(file)}
+                onClick={() => onView(file)}
                 className="h-6 w-6 text-blue-600"
                 title="Visualizza file"
               >

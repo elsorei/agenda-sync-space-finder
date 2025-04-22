@@ -88,14 +88,17 @@ const Index = () => {
     eventCopy.start = new Date(eventCopy.start);
     eventCopy.end = new Date(eventCopy.end);
     
-    // Verifica l'array degli allegati
+    // Verifica l'array degli allegati e fanne una copia profonda
     if (!eventCopy.attachments) {
       eventCopy.attachments = [];
+    } else {
+      // Assicuriamoci che gli allegati siano copiati profondamente
+      eventCopy.attachments = eventCopy.attachments.map(att => ({...att}));
     }
     
     // Log di debug
     console.log("Editing event:", eventCopy.id, eventCopy.title);
-    console.log("Event attachments before edit:", eventCopy.attachments);
+    console.log("Event attachments before edit:", eventCopy.attachments?.length || 0);
     
     setSelectedEvent(eventCopy);
     setIsEventDialogOpen(true);
@@ -128,7 +131,8 @@ const Index = () => {
         // id reale
         return [...prev, { 
           ...eventToSave, 
-          id: `event-${Date.now()}` 
+          id: `event-${Date.now()}`,
+          attachments: eventToSave.attachments // Assicuriamoci che gli allegati vengano mantenuti
         }];
       } else {
         // Aggiornamento evento

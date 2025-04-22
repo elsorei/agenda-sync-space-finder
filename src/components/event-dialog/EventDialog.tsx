@@ -18,6 +18,13 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
   const [attachments, setAttachments] = useState(event?.attachments || []);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // Debug degli allegati
+  useEffect(() => {
+    if (event?.attachments) {
+      console.log("EventDialog ricevuto evento:", event.id, "con allegati:", event.attachments.length);
+    }
+  }, [event]);
+
   // Sincronizza stati locali se l'evento cambia
   useEffect(() => {
     if (event) {
@@ -28,11 +35,19 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       setSelectedUserIds(event.userIds || []);
       setStartTime(event.start || null);
       setEndTime(event.end || null);
-      setAttachments(event.attachments || []);
+      
+      // Assicuriamoci di fare una copia profonda degli allegati
+      if (event.attachments && event.attachments.length > 0) {
+        setAttachments([...event.attachments.map(att => ({...att}))]);
+      } else {
+        setAttachments([]);
+      }
+      
       setIsEditMode(false); // Inizia in modalità visualizzazione
     } else {
       // Se è un nuovo evento, impostiamo automaticamente la modalità modifica
       setIsEditMode(true);
+      setAttachments([]);
     }
   }, [event]);
 
@@ -61,6 +76,7 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       return;
     }
     
+    console.log("Aggiunto allegato:", file.name);
     setAttachments((prev) => [...prev, file]);
   };
 
@@ -74,11 +90,13 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       return;
     }
     
+    console.log("Rimosso allegato con ID:", id);
     setAttachments((prev) => prev.filter((file) => file.id !== id));
   };
 
   const handleViewFile = (file: typeof attachments[number]) => {
     // Apri il file in una nuova finestra o scheda - possiamo permetterlo anche in modalità sola lettura
+    console.log("Visualizzo allegato:", file.name, file.url);
     if (file.url) {
       window.open(file.url, "_blank");
     } else {
@@ -140,7 +158,7 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       attachments: attachments.map(att => ({...att})), // Deep copy degli allegati
     };
 
-    console.log("Salvataggio evento con allegati:", updatedEvent.attachments);
+    console.log("Salvataggio evento con allegati:", updatedEvent.attachments.length);
     
     onSave(updatedEvent);
     setIsEditMode(false);
@@ -156,7 +174,13 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
         setSelectedUserIds(event.userIds || []);
         setStartTime(event.start || null);
         setEndTime(event.end || null);
-        setAttachments(event.attachments || []);
+        
+        // Assicuriamoci di fare una copia profonda degli allegati
+        if (event.attachments && event.attachments.length > 0) {
+          setAttachments([...event.attachments.map(att => ({...att}))]);
+        } else {
+          setAttachments([]);
+        }
       }
       setIsEditMode(false);
       toast({

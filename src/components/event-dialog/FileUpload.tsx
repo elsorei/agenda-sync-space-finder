@@ -53,9 +53,8 @@ export const FileUpload = ({ onFileUploaded, onCancel, allowedTypes = [] }: File
           setIsUploading(false);
           
           // Create mock file attachment
-          // In produzione, questo sarà sostituito con l'integrazione effettiva di Supabase Storage
           const newAttachment: FileAttachment = {
-            id: `file-${Date.now()}`,
+            id: `file-${Date.now()}`, // ID univoco
             name: selectedFile.name,
             type: selectedFile.type,
             size: selectedFile.size,
@@ -63,8 +62,8 @@ export const FileUpload = ({ onFileUploaded, onCancel, allowedTypes = [] }: File
             uploadedAt: new Date(),
           };
           
+          console.log("File caricato:", newAttachment.name);
           onFileUploaded(newAttachment);
-          onCancel();
           
           toast({
             title: "File caricato",
