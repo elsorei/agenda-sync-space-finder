@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,8 +52,13 @@ const EventDialog = ({
       setEndTime(event.end);
       setSelectedUserIds(event.userIds || []);
       setEventType(event.type || 'impegno');
-      // Make sure we're working with a copy of the attachments array
-      setAttachments(event.attachments ? [...event.attachments] : []);
+      
+      // Make sure we're working with a deep copy of the attachments array to break any references
+      setAttachments(event.attachments && event.attachments.length > 0 
+        ? JSON.parse(JSON.stringify(event.attachments)) 
+        : []);
+      
+      console.log("Loading event attachments:", event.attachments);
       
       // Se ci sono allegati e l'utente sta aprendo un evento esistente,
       // automaticamente passa alla tab degli allegati
@@ -79,6 +85,9 @@ const EventDialog = ({
   const handleSave = () => {
     if (!startTime || !endTime || selectedUserIds.length === 0) return;
 
+    // Use the current attachments state which should have all the correct files
+    console.log("Saving event with attachments:", attachments);
+    
     const updatedEvent: Event = {
       id: event?.id || `new-${Date.now()}`,
       title,
@@ -112,22 +121,26 @@ const EventDialog = ({
 
   const handleAddAttachment = (file: FileAttachment) => {
     setAttachments(prev => [...prev, file]);
+    console.log("Added attachment:", file.name);
   };
 
   const handleRemoveAttachment = (fileId: string) => {
     setAttachments(prev => prev.filter(file => file.id !== fileId));
+    console.log("Removed attachment with ID:", fileId);
   };
 
   const handleViewFile = (file: FileAttachment) => {
-    // Clone the file object to avoid any reference issues
-    const fileToView = { ...file };
-    console.log("Opening file in new window:", fileToView);
+    console.log("Opening file in new window:", file);
     
-    // Open the file in a new window without modifying the attachments
-    window.open(fileToView.url, '_blank');
+    // Open the file in a new window without modifying the attachments state
+    window.open(file.url, '_blank');
+    
+    // Make sure we're not modifying the attachments array when viewing a file
+    console.log("Attachments after opening file:", attachments);
+    
     toast({
       title: "File aperto",
-      description: `${fileToView.name} è stato aperto in una nuova finestra`,
+      description: `${file.name} è stato aperto in una nuova finestra`,
     });
   };
 
@@ -248,15 +261,11 @@ const EventDialog = ({
               
               {/* List of attached files with view button */}
               <div className="space-y-2">
-                {attachments.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">Nessun allegato</div>
-                ) : (
-                  <FileAttachmentList 
-                    attachments={attachments}
-                    onRemove={handleRemoveAttachment}
-                    onView={handleViewFile}
-                  />
-                )}
+                <FileAttachmentList 
+                  attachments={attachments}
+                  onRemove={handleRemoveAttachment}
+                  onView={handleViewFile}
+                />
               </div>
             </div>
           </TabsContent>

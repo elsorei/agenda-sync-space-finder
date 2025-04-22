@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
@@ -77,26 +78,28 @@ const Index = () => {
     setIsEventDialogOpen(true);
   };
 
-  // Aggiorna anche edit event: ora un evento può avere più utenti
+  // Edit event - ensuring to create a deep copy of the event to break any references
   const handleEditEvent = (event: Event) => {
-    // Assicuriamoci che l'evento abbia la proprietà attachments
-    const eventWithAttachments = {
+    // Assicuriamoci che l'evento abbia la proprietà attachments e che sia una copia profonda
+    const eventWithAttachments = JSON.parse(JSON.stringify({
       ...event,
       attachments: event.attachments || []
-    };
+    }));
     
     console.log("Editing event:", eventWithAttachments.id, eventWithAttachments.title);
+    console.log("Event attachments before edit:", eventWithAttachments.attachments);
+    
     setSelectedEvent(eventWithAttachments);
     setIsEventDialogOpen(true);
   };
 
-  // Salva evento con più utenti
+  // Salva evento preservando gli allegati
   const handleSaveEvent = (updatedEvent: Event) => {
-    // Assicuriamoci che l'evento abbia sempre gli attachments
-    const eventWithAttachments = {
+    // Use deep clone to ensure we're not modifying the original object by reference
+    const eventWithAttachments = JSON.parse(JSON.stringify({
       ...updatedEvent,
       attachments: updatedEvent.attachments || []
-    };
+    }));
     
     console.log("Salvataggio evento con allegati:", eventWithAttachments);
     
@@ -118,7 +121,11 @@ const Index = () => {
           title: "Evento aggiornato",
           description: `L'evento "${eventWithAttachments.title}" è stato aggiornato.`,
         });
-        return prev.map(e => e.id === eventWithAttachments.id ? eventWithAttachments : e);
+        return prev.map(e => 
+          e.id === eventWithAttachments.id 
+            ? eventWithAttachments 
+            : e
+        );
       }
     });
     

@@ -50,8 +50,8 @@ export const FileAttachmentList = ({
   const handleViewFile = (file: FileAttachment) => {
     console.log("Clicking view file:", file);
     if (onView) {
-      // Clone the file object to avoid reference issues
-      const fileClone = { ...file };
+      // Create a deep copy of the file object to completely isolate it
+      const fileClone = JSON.parse(JSON.stringify(file));
       onView(fileClone);
     }
   };
