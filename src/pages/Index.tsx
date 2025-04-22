@@ -74,6 +74,7 @@ const Index = () => {
       type: 'impegno',
       attachments: [] // Assicuriamoci che ogni nuovo evento abbia l'array attachments inizializzato
     };
+    console.log("Creating new event:", newEvent);
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
   };
@@ -86,6 +87,11 @@ const Index = () => {
     // Assicurati che le date siano oggetti Date
     eventCopy.start = new Date(eventCopy.start);
     eventCopy.end = new Date(eventCopy.end);
+    
+    // Verifica l'array degli allegati
+    if (!eventCopy.attachments) {
+      eventCopy.attachments = [];
+    }
     
     // Log di debug
     console.log("Editing event:", eventCopy.id, eventCopy.title);
@@ -106,6 +112,11 @@ const Index = () => {
     // Assicuriamoci che le date siano oggetti Date
     eventToSave.start = new Date(eventToSave.start);
     eventToSave.end = new Date(eventToSave.end);
+    
+    // Verifica la presenza degli allegati
+    if (!eventToSave.attachments) {
+      eventToSave.attachments = [];
+    }
     
     setEvents(prev => {
       // Nuovo evento

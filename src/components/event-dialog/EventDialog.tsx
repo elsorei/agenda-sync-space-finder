@@ -30,6 +30,9 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       setEndTime(event.end || null);
       setAttachments(event.attachments || []);
       setIsEditMode(false); // Inizia in modalità visualizzazione
+    } else {
+      // Se è un nuovo evento, impostiamo automaticamente la modalità modifica
+      setIsEditMode(true);
     }
   }, [event]);
 

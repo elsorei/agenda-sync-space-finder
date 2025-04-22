@@ -2,6 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { EventType } from "@/types";
+import { toast } from "@/hooks/use-toast";
 
 interface EventTypeSelectionProps {
   value: EventType;
@@ -14,6 +15,13 @@ export const EventTypeSelection = ({ value, onChange, disabled = false }: EventT
   const handleChange = (newValue: EventType) => {
     if (!disabled) {
       onChange(newValue);
+    } else {
+      // Se siamo in modalità disabled/readonly, mostriamo un toast informativo
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+        variant: "default",
+      });
     }
   };
 
