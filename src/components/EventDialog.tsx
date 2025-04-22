@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "./UserAvatar";
-import { Event, User } from "@/types";
+import { Event, User, EventType } from "@/types";
 import { format } from "date-fns";
 import { TimePickerDemo } from "./TimePicker";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 
 interface EventDialogProps {
   event: Event | null;
@@ -40,6 +43,7 @@ const EventDialog = ({
   const [endTime, setEndTime] = useState<Date | null>(null);
   // Multi-selezione degli utenti invitati
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [eventType, setEventType] = useState<EventType>('impegno');
 
   useEffect(() => {
     if (event) {
@@ -48,6 +52,7 @@ const EventDialog = ({
       setStartTime(event.start);
       setEndTime(event.end);
       setSelectedUserIds(event.userIds || []);
+      setEventType(event.type || 'impegno');
     } else {
       resetForm();
     }
@@ -59,6 +64,7 @@ const EventDialog = ({
     setStartTime(null);
     setEndTime(null);
     setSelectedUserIds([]);
+    setEventType('impegno');
   };
 
   const handleSave = () => {
@@ -72,6 +78,7 @@ const EventDialog = ({
       end: endTime,
       userIds: selectedUserIds,
       color: event?.color || "#9b87f5",
+      type: eventType,
     };
 
     onSave(updatedEvent);
@@ -110,6 +117,29 @@ const EventDialog = ({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {/* Tipo evento */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right">Tipo</Label>
+            <RadioGroup
+              value={eventType}
+              onValueChange={(value: EventType) => setEventType(value)}
+              className="col-span-3 flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="impegno" id="impegno" />
+                <Label htmlFor="impegno">Impegno</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="appuntamento" id="appuntamento" />
+                <Label htmlFor="appuntamento">Appuntamento</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="promemoria" id="promemoria" />
+                <Label htmlFor="promemoria">Promemoria</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Selezione multipla utenti */}
           <div className="flex flex-col gap-1 mb-2">
             <Label>Invitati:</Label>

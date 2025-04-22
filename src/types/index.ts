@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -6,16 +5,17 @@ export interface User {
   color: string;
 }
 
-// Cambia: l'evento ora può appartenere a più utenti tramite userIds
+export type EventType = 'impegno' | 'appuntamento' | 'promemoria';
+
 export interface Event {
   id: string;
-  // userId: string; // RIMOSSO
-  userIds: string[]; // AGGIUNTO: utenti invitati all'evento
+  userIds: string[];
   title: string;
   description?: string;
   start: Date;
   end: Date;
   color?: string;
+  type: EventType; // Nuovo campo per il tipo di evento
 }
 
 export interface TimeSlot {

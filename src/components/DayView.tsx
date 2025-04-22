@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
@@ -15,6 +14,10 @@ const DayView = ({
   onEditEvent
 }: DayViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Separa i promemoria dagli altri eventi
+  const reminders = events.filter(event => event.type === 'promemoria');
+  const regularEvents = events.filter(event => event.type !== 'promemoria');
 
   // Get half-hour intervals for the day view
   const halfHourIntervals = getDayViewHalfHourIntervals();
@@ -79,22 +82,30 @@ const DayView = ({
     return (
       <div
         key={event.id + "-" + mainUserId}
-        className="absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden"
+        className={cn(
+          "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden",
+          event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400"
+        )}
         style={{
-          top: `${top}px`,
+          top: event.type === 'promemoria' ? 'auto' : `${top}px`,
           height: `${height}px`,
-          backgroundColor: `${event.color}20`,
-          borderLeft: `3px solid ${event.color}`,
+          backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}20`,
+          borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
           zIndex
         }}
         onClick={(e) => {
-          e.stopPropagation(); // Impedisci click sul background
+          e.stopPropagation();
           onEditEvent && onEditEvent(event);
         }}
       >
         <div className="flex items-start justify-between h-full">
           <div className="overflow-hidden">
-            <div className="font-medium truncate text-sm">{event.title}</div>
+            <div className="font-medium truncate text-sm">
+              {event.title}
+              <span className="ml-2 text-xs opacity-70">
+                ({event.type})
+              </span>
+            </div>
             <div className="text-xs opacity-70 truncate">
               {formatTime(event.start)} - {formatTime(event.end)}
             </div>
@@ -129,6 +140,23 @@ const DayView = ({
         
         {/* Main calendar grid */}
         <div className="flex-1 relative" style={{ height: `${16 * hourHeight}px` }}>
+          {/* Promemoria section */}
+          {reminders.length > 0 && (
+            <div className="sticky top-0 z-50 bg-yellow-50/90 backdrop-blur-sm border-b p-2">
+              <h3 className="text-sm font-medium mb-2">Promemoria del giorno</h3>
+              <div className="space-y-2">
+                {reminders.map((reminder, index) => 
+                  reminder.userIds.map(userId => renderEvent(reminder, 1000 + index, userId))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Regular events */}
+          {regularEvents.map((event, eventIndex) => 
+            event.userIds.map(userId => renderEvent(event, eventIndex, userId))
+          )}
+
           {/* Time indicators with half-hour slots */}
           <div className="absolute left-0 top-0 w-full h-full pointer-events-auto">
             {halfHourIntervals.map((timeStr, index) => {
@@ -162,24 +190,13 @@ const DayView = ({
             })}
           </div>
           
-          {/* Background for click handling - col z-index più basso per dare priorità ai click sui bottoni */}
+          {/* Background for click handling */}
           <div 
             ref={containerRef}
             className="absolute left-0 top-0 w-full h-full touch-none z-0"
             style={{ touchAction: "none" }}
             onClick={handleBackgroundClick}
           />
-
-          {/* Event per ogni user */}
-          {users.map((user, userIndex) => {
-            // mostra solo eventi in cui l'utente è invitato
-            const userEvents = events.filter((event) => 
-              event.userIds && event.userIds.includes(user.id)
-            );
-            return userEvents.map((event, eventIndex) =>
-              renderEvent(event, userIndex * 100 + eventIndex, user.id)
-            );
-          })}
         </div>
       </div>
     </div>
