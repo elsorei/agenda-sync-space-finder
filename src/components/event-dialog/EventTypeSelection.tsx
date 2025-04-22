@@ -10,14 +10,20 @@ interface EventTypeSelectionProps {
 }
 
 export const EventTypeSelection = ({ value, onChange, disabled = false }: EventTypeSelectionProps) => {
+  // Funzione per gestire il cambio di valore considerando la modalità disabled
+  const handleChange = (newValue: EventType) => {
+    if (!disabled) {
+      onChange(newValue);
+    }
+  };
+
   return (
     <div className="grid grid-cols-4 items-start gap-4">
       <Label className="text-right">Tipo</Label>
       <RadioGroup
         value={value}
-        onValueChange={(value: EventType) => !disabled && onChange(value)}
+        onValueChange={handleChange}
         className="col-span-3 flex gap-4"
-        disabled={disabled}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="impegno" id="impegno" disabled={disabled} />

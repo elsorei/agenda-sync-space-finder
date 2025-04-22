@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue, 
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -28,6 +29,8 @@ interface Board {
   messages: Message[];
   userIds: string[]; // Massimo 10 utenti
 }
+
+const MAX_USERS_PER_BOARD = 10; // Costante configurabile per il numero massimo di utenti
 
 const Blackboard = () => {
   const [users] = useState<User[]>(mockUsers);
@@ -60,6 +63,10 @@ const Blackboard = () => {
   // Nuovo messaggio
   const [newMessage, setNewMessage] = useState("");
   
+  // Stato per la gestione dell'aggiunta di un nuovo utente
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
+  
   const handleSendMessage = () => {
     if (!newMessage.trim() || !currentBoard) return;
     
@@ -90,6 +97,55 @@ const Blackboard = () => {
     user => !currentBoard?.userIds.includes(user.id)
   );
   
+  // Gestione dell'aggiunta di un nuovo utente alla board
+  const handleAddUser = () => {
+    if (!selectedUserToAdd || !currentBoard) return;
+    
+    // Controllo sul numero massimo di utenti
+    if (currentBoard.userIds.length >= MAX_USERS_PER_BOARD) {
+      toast({
+        title: "Limite raggiunto",
+        description: `Non è possibile aggiungere più di ${MAX_USERS_PER_BOARD} utenti a una lavagna.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Aggiungiamo l'utente selezionato
+    const updatedBoards = boards.map(board => 
+      board.id === currentBoardId
+        ? { ...board, userIds: [...board.userIds, selectedUserToAdd] }
+        : board
+    );
+    
+    setBoards(updatedBoards);
+    setIsAddingUser(false);
+    setSelectedUserToAdd("");
+    
+    toast({
+      title: "Utente aggiunto",
+      description: "L'utente è stato aggiunto alla lavagna.",
+    });
+  };
+  
+  // Gestione della creazione di una nuova lavagna
+  const handleCreateBoard = () => {
+    const newBoard: Board = {
+      id: `board-${Date.now()}`,
+      name: `Nuova Lavagna ${boards.length + 1}`,
+      userIds: [users[0].id], // Solo l'utente corrente inizialmente
+      messages: [],
+    };
+    
+    setBoards([...boards, newBoard]);
+    setCurrentBoardId(newBoard.id);
+    
+    toast({
+      title: "Lavagna creata",
+      description: "Una nuova lavagna è stata creata con successo.",
+    });
+  };
+  
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Blackboard</h1>
@@ -111,7 +167,7 @@ const Blackboard = () => {
           </SelectContent>
         </Select>
         
-        <Button variant="outline" disabled>
+        <Button variant="outline" onClick={handleCreateBoard}>
           Crea Nuova Lavagna
         </Button>
       </div>
@@ -120,7 +176,7 @@ const Blackboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Lista utenti della board */}
           <div className="md:col-span-1 p-4 border rounded-lg bg-background">
-            <h3 className="font-medium mb-4">Utenti ({currentBoard.userIds.length}/10)</h3>
+            <h3 className="font-medium mb-4">Utenti ({currentBoard.userIds.length}/{MAX_USERS_PER_BOARD})</h3>
             <div className="space-y-3">
               {currentBoard.userIds.map(userId => {
                 const user = users.find(u => u.id === userId);
@@ -132,15 +188,60 @@ const Blackboard = () => {
                   </div>
                 );
               })}
-              {currentBoard.userIds.length < 10 && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                  disabled={availableUsers.length === 0}
-                >
-                  Aggiungi Utente
-                </Button>
+              
+              {/* UI per aggiungere nuovi utenti */}
+              {isAddingUser ? (
+                <div className="mt-2 space-y-2">
+                  <Select
+                    value={selectedUserToAdd}
+                    onValueChange={setSelectedUserToAdd}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Seleziona utente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="w-1/2"
+                      onClick={handleAddUser}
+                      disabled={!selectedUserToAdd}
+                    >
+                      Aggiungi
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-1/2"
+                      onClick={() => {
+                        setIsAddingUser(false);
+                        setSelectedUserToAdd("");
+                      }}
+                    >
+                      Annulla
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                currentBoard.userIds.length < MAX_USERS_PER_BOARD && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-2"
+                    onClick={() => setIsAddingUser(true)}
+                    disabled={availableUsers.length === 0}
+                  >
+                    Aggiungi Utente
+                  </Button>
+                )
               )}
             </div>
           </div>

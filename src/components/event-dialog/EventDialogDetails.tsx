@@ -42,6 +42,19 @@ export const EventDialogDetails = ({
   setDescription,
   isReadOnly = false
 }: EventDialogDetailsProps) => {
+  // Se il componente è in modalità readonly, creiamo wrapper per non alterare lo stato
+  const handleStartTimeChange = (date: Date) => {
+    if (!isReadOnly) {
+      setStartTime(date);
+    }
+  };
+
+  const handleEndTimeChange = (date: Date) => {
+    if (!isReadOnly) {
+      setEndTime(date);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <EventTypeSelection 
@@ -75,8 +88,7 @@ export const EventDialogDetails = ({
           {startTime && (
             <TimePickerDemo
               date={startTime}
-              setDate={setStartTime}
-              disabled={isReadOnly}
+              setDate={handleStartTimeChange}
             />
           )}
         </div>
@@ -89,8 +101,7 @@ export const EventDialogDetails = ({
           {endTime && (
             <TimePickerDemo
               date={endTime}
-              setDate={setEndTime}
-              disabled={isReadOnly}
+              setDate={handleEndTimeChange}
             />
           )}
         </div>
