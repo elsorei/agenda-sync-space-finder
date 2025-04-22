@@ -1,5 +1,5 @@
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
 import { formatTime, getEventStyle, getDayViewHalfHourIntervals } from "@/utils/timeUtils";
@@ -16,6 +16,7 @@ const DayView = ({
   onEditEvent
 }: DayViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
   
   // Separa i promemoria dagli altri eventi
   const reminders = events.filter(event => event.type === 'promemoria');
@@ -87,27 +88,41 @@ const DayView = ({
       onEditEvent(event);
     }
   };
+
+  const handleEventMouseEnter = (eventId: string) => {
+    setHoveredEventId(eventId);
+  };
+
+  const handleEventMouseLeave = () => {
+    setHoveredEventId(null);
+  };
   
   const renderEvent = (event: Event, zIndex: number, mainUserId: string) => {
     const eventStyle = getEventStyle(event, hourHeight);
     const user = users.find(u => u.id === mainUserId);
     const hasAttachments = event.attachments && event.attachments.length > 0;
+    const isHovered = hoveredEventId === event.id;
 
     return (
       <div
         key={event.id + "-" + mainUserId}
         className={cn(
           "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden cursor-pointer hover:shadow-md transition-shadow",
-          event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400"
+          event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400",
+          isHovered && "ring-2 ring-primary bg-primary/10"
         )}
         style={{
           top: event.type === 'promemoria' ? 'auto' : eventStyle.top,
           height: eventStyle.height,
-          backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}20`,
+          backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}${isHovered ? '40' : '20'}`,
           borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
-          zIndex
+          zIndex: isHovered ? 50 : zIndex
         }}
         onClick={(e) => handleEventClick(e, event)}
+        onMouseEnter={() => handleEventMouseEnter(event.id)}
+        onMouseLeave={handleEventMouseLeave}
+        onTouchStart={() => handleEventMouseEnter(event.id)}
+        onTouchEnd={handleEventMouseLeave}
         aria-label={`Apri evento: ${event.title}`}
       >
         <div className="flex items-start justify-between h-full">
