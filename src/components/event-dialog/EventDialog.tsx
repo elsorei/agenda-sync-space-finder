@@ -21,7 +21,8 @@ import { EventTypeSelection } from "./EventTypeSelection";
 import { EventDialogProps } from "./types";
 import { FileUpload } from "./FileUpload";
 import { FileAttachmentList } from "./FileAttachmentList";
-import { PaperclipIcon } from "lucide-react";
+import { PaperclipIcon, FileIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EventDialog = ({
   event,
@@ -39,6 +40,7 @@ const EventDialog = ({
   const [eventType, setEventType] = useState<EventType>('impegno');
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
     if (event) {
@@ -110,7 +112,7 @@ const EventDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {event?.id?.startsWith("new-") ? "Nuovo evento" : "Modifica evento"}
@@ -121,103 +123,116 @@ const EventDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <EventTypeSelection value={eventType} onChange={(value: EventType) => setEventType(value)} />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Dettagli</TabsTrigger>
+            <TabsTrigger 
+              value="attachments"
+              className="flex items-center gap-1"
+            >
+              <FileIcon className="h-4 w-4" />
+              Allegati {attachments.length > 0 && `(${attachments.length})`}
+            </TabsTrigger>
+          </TabsList>
           
-          <UserSelection
-            users={users}
-            selectedUserIds={selectedUserIds}
-            onToggleUser={handleToggleUser}
-          />
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="title" className="text-right">
-              Titolo
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="col-span-3"
+          <TabsContent value="details" className="mt-4 space-y-4">
+            <EventTypeSelection value={eventType} onChange={(value: EventType) => setEventType(value)} />
+            
+            <UserSelection
+              users={users}
+              selectedUserIds={selectedUserIds}
+              onToggleUser={handleToggleUser}
             />
-          </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="start" className="text-right">
-              Inizio
-            </Label>
-            <div className="col-span-3">
-              {startTime && (
-                <TimePickerDemo
-                  date={startTime}
-                  setDate={setStartTime}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="end" className="text-right">
-              Fine
-            </Label>
-            <div className="col-span-3">
-              {endTime && (
-                <TimePickerDemo
-                  date={endTime}
-                  setDate={setEndTime}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right">
-              Descrizione
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
-              rows={3}
-            />
-          </div>
-
-          {/* File attachments section */}
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right">
-              Allegati
-            </Label>
-            <div className="col-span-3">
-              {/* List of attached files */}
-              <FileAttachmentList 
-                attachments={attachments} 
-                onRemove={handleRemoveAttachment} 
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Titolo
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="col-span-3"
               />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="start" className="text-right">
+                Inizio
+              </Label>
+              <div className="col-span-3">
+                {startTime && (
+                  <TimePickerDemo
+                    date={startTime}
+                    setDate={setStartTime}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="end" className="text-right">
+                Fine
+              </Label>
+              <div className="col-span-3">
+                {endTime && (
+                  <TimePickerDemo
+                    date={endTime}
+                    setDate={setEndTime}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="description" className="text-right">
+                Descrizione
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+                rows={3}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="attachments" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium">Allegati</h3>
+                {!showFileUpload && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowFileUpload(true)}
+                  >
+                    <PaperclipIcon className="h-4 w-4 mr-2" />
+                    Aggiungi allegato
+                  </Button>
+                )}
+              </div>
               
-              {/* File upload button */}
-              {!showFileUpload ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2" 
-                  onClick={() => setShowFileUpload(true)}
-                >
-                  <PaperclipIcon className="h-4 w-4 mr-2" />
-                  Aggiungi allegato
-                </Button>
-              ) : (
+              {/* File upload form */}
+              {showFileUpload && (
                 <FileUpload 
                   onFileUploaded={handleAddAttachment}
                   onCancel={() => setShowFileUpload(false)}
                   allowedTypes={['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg']}
                 />
               )}
+              
+              {/* List of attached files */}
+              <FileAttachmentList 
+                attachments={attachments} 
+                onRemove={handleRemoveAttachment} 
+              />
             </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex justify-between mt-6">
           {event && !event.id.startsWith("new-") && onDelete && (
             <Button
               variant="destructive"

@@ -5,6 +5,7 @@ import { UserAvatar } from "./UserAvatar";
 import { formatTime, getEventStyle, getDayViewHalfHourIntervals } from "@/utils/timeUtils";
 import { startOfDay, addMinutes, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { PaperclipIcon } from "lucide-react";
 
 const DayView = ({ 
   date, 
@@ -76,15 +77,23 @@ const DayView = ({
     }
   };
   
+  const handleEventClick = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
+    if (onEditEvent) {
+      onEditEvent(event);
+    }
+  };
+  
   const renderEvent = (event: Event, zIndex: number, mainUserId: string) => {
     const eventStyle = getEventStyle(event, hourHeight);
     const user = users.find(u => u.id === mainUserId);
+    const hasAttachments = event.attachments && event.attachments.length > 0;
 
     return (
       <div
         key={event.id + "-" + mainUserId}
         className={cn(
-          "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden",
+          "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden cursor-pointer hover:shadow-md transition-shadow",
           event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400"
         )}
         style={{
@@ -94,18 +103,19 @@ const DayView = ({
           borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
           zIndex
         }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onEditEvent && onEditEvent(event);
-        }}
+        onClick={(e) => handleEventClick(e, event)}
+        aria-label={`Apri evento: ${event.title}`}
       >
         <div className="flex items-start justify-between h-full">
-          <div className="overflow-hidden">
-            <div className="font-medium truncate text-sm">
+          <div className="overflow-hidden flex-1">
+            <div className="font-medium truncate text-sm flex items-center">
               {event.title}
               <span className="ml-2 text-xs opacity-70">
                 ({event.type})
               </span>
+              {hasAttachments && (
+                <PaperclipIcon className="h-3 w-3 ml-1 text-muted-foreground" />
+              )}
             </div>
             <div className="text-xs opacity-70 truncate">
               {formatTime(event.start)} - {formatTime(event.end)}
@@ -114,6 +124,11 @@ const DayView = ({
             {parseInt(eventStyle.height.toString()) > 60 && event.description && (
               <div className="text-xs mt-1 line-clamp-2 opacity-70">
                 {event.description}
+              </div>
+            )}
+            {hasAttachments && parseInt(eventStyle.height.toString()) > 80 && (
+              <div className="text-xs mt-1 text-blue-600">
+                {event.attachments!.length} allegato/i
               </div>
             )}
           </div>
