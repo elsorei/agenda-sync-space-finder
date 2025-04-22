@@ -54,12 +54,13 @@ export const FileAttachmentList = ({
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <span 
-              className="hover:underline cursor-pointer"
+            <button 
+              type="button"
+              className="hover:underline cursor-pointer text-blue-600"
               onClick={() => onView && onView(file)}
             >
               {file.name}
-            </span>
+            </button>
             <span className="text-xs text-muted-foreground">
               {formatFileSize(file.size)}
             </span>

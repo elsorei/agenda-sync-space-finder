@@ -79,7 +79,11 @@ const DayView = ({
   
   const handleEventClick = (e: React.MouseEvent, event: Event) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent default to be sure no other handlers fire
+    
+    // Ensure we call onEditEvent directly, not causing any new event creation
     if (onEditEvent) {
+      console.log("Editing event:", event.id, event.title);
       onEditEvent(event);
     }
   };
