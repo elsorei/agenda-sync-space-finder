@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { EventDialogProps } from "./types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -33,12 +32,14 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       setDescription(event.description || "");
       setEventType(event.type || "impegno");
       setSelectedUserIds(event.userIds || []);
-      setStartTime(event.start || null);
-      setEndTime(event.end || null);
+      setStartTime(event.start ? new Date(event.start) : null);
+      setEndTime(event.end ? new Date(event.end) : null);
       
       // Assicuriamoci di fare una copia profonda degli allegati
       if (event.attachments && event.attachments.length > 0) {
-        setAttachments([...event.attachments.map(att => ({...att}))]);
+        const attachmentsCopy = structuredClone(event.attachments);
+        console.log("Copiati allegati:", attachmentsCopy.length);
+        setAttachments(attachmentsCopy);
       } else {
         setAttachments([]);
       }
@@ -49,7 +50,7 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       setIsEditMode(true);
       setAttachments([]);
     }
-  }, [event]);
+  }, [event, isOpen]);
 
   const onToggleUser = (userId: string) => {
     if (!isEditMode) {
@@ -155,7 +156,7 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
       userIds: [...selectedUserIds],
       start: new Date(startTime.getTime()),
       end: new Date(endTime.getTime()),
-      attachments: attachments.map(att => ({...att})), // Deep copy degli allegati
+      attachments: structuredClone(attachments), // Deep copy degli allegati con structuredClone
     };
 
     console.log("Salvataggio evento con allegati:", updatedEvent.attachments.length);

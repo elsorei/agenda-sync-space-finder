@@ -7,7 +7,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Calendar, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Users, RefreshCw } from "lucide-react";
 import { format, subDays, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -17,6 +17,7 @@ interface CalendarHeaderProps {
   view: 'day' | 'week' | 'month';
   onViewChange: (view: 'day' | 'week' | 'month') => void;
   onFindFreeSlots: () => void;
+  onRefresh?: () => void; // Aggiungiamo la proprietà opzionale
 }
 
 const CalendarHeader = ({
@@ -24,7 +25,8 @@ const CalendarHeader = ({
   onDateChange,
   view,
   onViewChange,
-  onFindFreeSlots
+  onFindFreeSlots,
+  onRefresh
 }: CalendarHeaderProps) => {
   const goToPrevious = () => {
     const newDate = subDays(date, 1);
@@ -73,6 +75,12 @@ const CalendarHeader = ({
             <SelectItem value="month">Mese</SelectItem>
           </SelectContent>
         </Select>
+        
+        {onRefresh && (
+          <Button onClick={onRefresh} variant="outline" size="icon" title="Aggiorna eventi">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        )}
         
         <Button onClick={onFindFreeSlots} variant="outline" className="gap-2">
           <Users className="h-4 w-4" />
