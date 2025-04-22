@@ -1,4 +1,3 @@
-
 import { User, Event } from '../types';
 import { addHours, setHours, setMinutes, startOfDay } from 'date-fns';
 
@@ -49,6 +48,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 9),
       end: createTime(baseDate, 10, 30),
       color: '#3498db',
+      type: 'impegno'
     },
     {
       id: '2',
@@ -57,6 +57,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 12, 30),
       end: createTime(baseDate, 14),
       color: '#3498db',
+      type: 'appuntamento'
     },
     {
       id: '3',
@@ -65,6 +66,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 16),
       end: createTime(baseDate, 17),
       color: '#3498db',
+      type: 'impegno'
     },
     {
       id: '4',
@@ -73,6 +75,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 10),
       end: createTime(baseDate, 11, 30),
       color: '#e74c3c',
+      type: 'impegno'
     },
     {
       id: '5',
@@ -81,6 +84,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 14),
       end: createTime(baseDate, 16),
       color: '#e74c3c',
+      type: 'impegno'
     },
     {
       id: '6',
@@ -89,6 +93,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 9, 30),
       end: createTime(baseDate, 12),
       color: '#2ecc71',
+      type: 'impegno'
     },
     {
       id: '7',
@@ -97,6 +102,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 15),
       end: createTime(baseDate, 18),
       color: '#2ecc71',
+      type: 'impegno'
     },
     {
       id: '8',
@@ -105,6 +111,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 11),
       end: createTime(baseDate, 13),
       color: '#f39c12',
+      type: 'promemoria'
     },
     {
       id: '9',
@@ -113,6 +120,7 @@ export const generateMockEvents = (date: Date): Event[] => {
       start: createTime(baseDate, 14, 30),
       end: createTime(baseDate, 15, 45),
       color: '#f39c12',
+      type: 'promemoria'
     },
   ];
 };
@@ -132,5 +140,6 @@ export const createEvent = (
     start,
     end,
     color: user?.color,
+    type: 'impegno'
   };
 };

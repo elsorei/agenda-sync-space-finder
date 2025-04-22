@@ -3,7 +3,7 @@ import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
 import UsersList from "@/components/UsersList";
 import DayView from "@/components/DayView";
-import EventDialog from "@/components/EventDialog";
+import EventDialog from "@/components/event-dialog";
 import FreeSlotFinder from "@/components/FreeSlotFinder";
 import { mockUsers, generateMockEvents, createEvent } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";

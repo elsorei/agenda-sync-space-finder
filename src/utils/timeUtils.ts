@@ -1,4 +1,3 @@
-
 import { Event, TimeSlot, User } from '../types';
 import { 
   addMinutes, 
@@ -171,5 +170,6 @@ export const createEmptyEvent = (
     title: 'Nuovo evento',
     start,
     end,
+    type: 'impegno'
   };
 };
