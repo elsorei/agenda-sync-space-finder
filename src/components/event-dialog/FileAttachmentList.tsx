@@ -47,6 +47,15 @@ export const FileAttachmentList = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleViewFile = (file: FileAttachment) => {
+    console.log("Clicking view file:", file);
+    if (onView) {
+      // Clone the file object to avoid reference issues
+      const fileClone = { ...file };
+      onView(fileClone);
+    }
+  };
+
   return (
     <div className="space-y-2">
       {attachments.map((file) => (
@@ -56,10 +65,7 @@ export const FileAttachmentList = ({
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <span className="hover:underline cursor-pointer" onClick={() => {
-              console.log("Clicking view file:", file);
-              onView && onView(file);
-            }}>
+            <span className="hover:underline cursor-pointer" onClick={() => handleViewFile(file)}>
               {file.name}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -71,10 +77,7 @@ export const FileAttachmentList = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => {
-                  console.log("Clicking view button:", file);
-                  onView(file);
-                }}
+                onClick={() => handleViewFile(file)}
                 className="h-6 w-6 text-blue-600"
                 title="Visualizza file"
               >

@@ -51,7 +51,7 @@ export const createEvent = (
     userIds,
     color: color || "#9b87f5",
     type,
-    attachments: [], // Aggiungiamo l'array di attachments vuoto
+    attachments: [], // Manteniamo l'array vuoto di default
   };
 };
 

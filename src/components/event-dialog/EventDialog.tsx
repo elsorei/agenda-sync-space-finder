@@ -51,7 +51,8 @@ const EventDialog = ({
       setEndTime(event.end);
       setSelectedUserIds(event.userIds || []);
       setEventType(event.type || 'impegno');
-      setAttachments(event.attachments || []);
+      // Make sure we're working with a copy of the attachments array
+      setAttachments(event.attachments ? [...event.attachments] : []);
       
       // Se ci sono allegati e l'utente sta aprendo un evento esistente,
       // automaticamente passa alla tab degli allegati
@@ -118,11 +119,15 @@ const EventDialog = ({
   };
 
   const handleViewFile = (file: FileAttachment) => {
-    // Apri il file in una nuova finestra senza modificare gli allegati
-    window.open(file.url, '_blank');
+    // Clone the file object to avoid any reference issues
+    const fileToView = { ...file };
+    console.log("Opening file in new window:", fileToView);
+    
+    // Open the file in a new window without modifying the attachments
+    window.open(fileToView.url, '_blank');
     toast({
       title: "File aperto",
-      description: `${file.name} è stato aperto in una nuova finestra`,
+      description: `${fileToView.name} è stato aperto in una nuova finestra`,
     });
   };
 

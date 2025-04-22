@@ -71,7 +71,7 @@ const Index = () => {
       userIds,
       color: "#9b87f5",
       type: 'impegno',
-      attachments: [] // Assicuriamoci che ogni nuovo evento abbia l'array attachments
+      attachments: [] // Assicuriamoci che ogni nuovo evento abbia l'array attachments inizializzato
     };
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
@@ -85,6 +85,7 @@ const Index = () => {
       attachments: event.attachments || []
     };
     
+    console.log("Editing event:", eventWithAttachments.id, eventWithAttachments.title);
     setSelectedEvent(eventWithAttachments);
     setIsEventDialogOpen(true);
   };
@@ -107,7 +108,10 @@ const Index = () => {
           description: `L'evento "${eventWithAttachments.title}" è stato creato.`,
         });
         // id reale
-        return [...prev, { ...eventWithAttachments, id: `event-${Date.now()}` }];
+        return [...prev, { 
+          ...eventWithAttachments, 
+          id: `event-${Date.now()}` 
+        }];
       } else {
         // Aggiornamento evento - manteniamo gli allegati esistenti
         toast({
