@@ -25,16 +25,49 @@ export function TimePickerDemo({
   const minuteOptions = Array.from({ length: 4 }, (_, i) => i * 15)
   const hourOptions = Array.from({ length: 24 }, (_, i) => i)
 
+  // Verifichiamo che date sia un oggetto Date valido
+  const isValidDate = date instanceof Date && !isNaN(date.getTime());
+
+  // Se date non è valido, creiamo una nuova istanza con l'ora corrente
+  React.useEffect(() => {
+    if (!isValidDate) {
+      console.warn("TimePicker received an invalid date, using current time instead");
+      setDate(new Date());
+    }
+  }, [date, isValidDate, setDate]);
+
   const handleHourChange = (hour: string) => {
+    // Proteggiamo la funzione da date non valide
+    if (!isValidDate) return;
+    
     const newDate = new Date(date)
     newDate.setHours(parseInt(hour))
     setDate(newDate)
   }
 
   const handleMinuteChange = (minute: string) => {
+    // Proteggiamo la funzione da date non valide
+    if (!isValidDate) return;
+    
     const newDate = new Date(date)
     newDate.setMinutes(parseInt(minute))
     setDate(newDate)
+  }
+
+  // Se date non è valido, mostriamo un pulsante disabilitato
+  if (!isValidDate) {
+    return (
+      <Button
+        variant={"outline"}
+        className={cn(
+          "w-full justify-start text-left font-normal opacity-50"
+        )}
+        disabled
+      >
+        <Clock className="mr-2 h-4 w-4" />
+        Orario non valido
+      </Button>
+    );
   }
 
   return (
