@@ -103,6 +103,9 @@ const DayView = ({
     const hasAttachments = event.attachments && event.attachments.length > 0;
     const isHovered = hoveredEventId === event.id;
 
+    // Riportiamo lo zIndex a un valore più alto quando l'evento è hover
+    const effectiveZIndex = isHovered ? 50 : zIndex;
+
     return (
       <div
         key={event.id + "-" + mainUserId}
@@ -116,7 +119,7 @@ const DayView = ({
           height: eventStyle.height,
           backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}${isHovered ? '40' : '20'}`,
           borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
-          zIndex: isHovered ? 50 : zIndex
+          zIndex: effectiveZIndex
         }}
         onClick={(e) => handleEventClick(e, event)}
         onMouseEnter={() => handleEventMouseEnter(event.id)}
@@ -190,9 +193,11 @@ const DayView = ({
           )}
 
           {/* Regular events */}
-          {regularEvents.map((event, eventIndex) => 
-            event.userIds.map(userId => renderEvent(event, eventIndex, userId))
-          )}
+          <div className="relative">
+            {regularEvents.map((event, eventIndex) => 
+              event.userIds.map(userId => renderEvent(event, eventIndex, userId))
+            )}
+          </div>
 
           {/* Time indicators with half-hour slots */}
           <div className="absolute left-0 top-0 w-full h-full pointer-events-auto">
