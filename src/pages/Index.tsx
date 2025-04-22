@@ -4,7 +4,7 @@ import { Event, User } from "@/types";
 import CalendarHeader from "@/components/CalendarHeader";
 import UsersList from "@/components/UsersList";
 import DayView from "@/components/DayView";
-import EventDialog from "@/components/event-dialog";
+import EventDialog from "@/components/EventDialog";
 import FreeSlotFinder from "@/components/FreeSlotFinder";
 import { mockUsers, generateMockEvents } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
@@ -79,24 +79,20 @@ const Index = () => {
     setIsEventDialogOpen(true);
   };
 
-  // Edit event - ensuring to create a deep copy of the event to break any references
+  // Modifica evento - assicurandoci di creare una copia profonda dell'evento
   const handleEditEvent = (event: Event) => {
-    // Crea una copia profonda dell'evento per evitare modifiche accidentali
+    // Crea una copia profonda dell'evento utilizzando structuredClone
     const eventCopy = structuredClone(event);
     
     // Assicurati che le date siano oggetti Date
     eventCopy.start = new Date(eventCopy.start);
     eventCopy.end = new Date(eventCopy.end);
     
-    // Verifica l'array degli allegati e fanne una copia profonda
+    // Assicurati che ci sia l'array attachments
     if (!eventCopy.attachments) {
       eventCopy.attachments = [];
-    } else {
-      // Assicuriamoci che gli allegati siano copiati profondamente
-      eventCopy.attachments = eventCopy.attachments.map(att => ({...att}));
     }
     
-    // Log di debug
     console.log("Editing event:", eventCopy.id, eventCopy.title);
     console.log("Event attachments before edit:", eventCopy.attachments?.length || 0);
     
@@ -128,14 +124,14 @@ const Index = () => {
           title: "Evento creato",
           description: `L'evento "${eventToSave.title}" è stato creato.`,
         });
-        // id reale
+        // Generiamo un ID reale e manteniamo gli allegati
         return [...prev, { 
           ...eventToSave, 
           id: `event-${Date.now()}`,
           attachments: eventToSave.attachments // Assicuriamoci che gli allegati vengano mantenuti
         }];
       } else {
-        // Aggiornamento evento
+        // Aggiornamento evento - manteniamo gli allegati
         toast({
           title: "Evento aggiornato",
           description: `L'evento "${eventToSave.title}" è stato aggiornato.`,

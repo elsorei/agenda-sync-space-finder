@@ -13,13 +13,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "./UserAvatar";
-import { Event, User, EventType } from "@/types";
+import { Event, User, EventType, FileAttachment } from "@/types";
 import { format } from "date-fns";
 import { TimePickerDemo } from "./TimePicker";
 import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
+import { FileUpload } from "./event-dialog/FileUpload";
+import { FileAttachmentList } from "./event-dialog/FileAttachmentList";
+import { toast } from "@/hooks/use-toast";
+import { PaperclipIcon, Save, X, Edit } from "lucide-react";
 
 interface EventDialogProps {
   event: Event | null;
@@ -42,22 +46,36 @@ const EventDialog = ({
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
-  // Multi-selezione degli utenti invitati
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [eventType, setEventType] = useState<EventType>('impegno');
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
+  // Log dello stato degli allegati per debug
+  useEffect(() => {
+    console.log("EventDialog - Allegati correnti:", attachments?.length || 0, attachments);
+  }, [attachments]);
+
+  // Reset del form quando l'evento cambia o quando il dialog si apre/chiude
   useEffect(() => {
     if (event) {
+      console.log("EventDialog - Nuovo evento caricato:", event.id, "con allegati:", event.attachments?.length || 0);
       setTitle(event.title);
       setDescription(event.description || "");
-      setStartTime(event.start);
-      setEndTime(event.end);
-      setSelectedUserIds(event.userIds || []);
+      setStartTime(new Date(event.start));
+      setEndTime(new Date(event.end));
+      setSelectedUserIds([...event.userIds]);
       setEventType(event.type || 'impegno');
+      // Deep copy degli allegati
+      setAttachments(event.attachments ? [...event.attachments.map(att => ({...att}))] : []);
+      
+      // Se è un nuovo evento, entra subito in modalità modifica
+      setIsEditMode(event.id.startsWith("new-"));
     } else {
       resetForm();
     }
-  }, [event]);
+  }, [event, isOpen]);
 
   const resetForm = () => {
     setTitle("");
@@ -66,25 +84,84 @@ const EventDialog = ({
     setEndTime(null);
     setSelectedUserIds([]);
     setEventType('impegno');
+    setAttachments([]);
+    setIsEditMode(false);
+    setShowFileUpload(false);
   };
 
   const handleSave = () => {
-    if (!startTime || !endTime || selectedUserIds.length === 0) return;
+    // Se non siamo in modalità modifica, entriamo in modalità modifica
+    if (!isEditMode) {
+      setIsEditMode(true);
+      return;
+    }
 
+    // Validazione
+    if (!startTime || !endTime) {
+      toast({
+        title: "Errore",
+        description: "Seleziona orari di inizio e fine validi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedUserIds.length === 0) {
+      toast({
+        title: "Errore",
+        description: "Seleziona almeno un utente",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!title.trim()) {
+      toast({
+        title: "Errore",
+        description: "Inserisci un titolo per l'evento",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Creiamo una copia profonda dell'evento per evitare reference issues
     const updatedEvent: Event = {
       id: event?.id || `new-${Date.now()}`,
       title,
       description,
-      start: startTime,
-      end: endTime,
-      userIds: selectedUserIds,
+      start: new Date(startTime),
+      end: new Date(endTime),
+      userIds: [...selectedUserIds],
       color: event?.color || "#9b87f5",
       type: eventType,
-      attachments: event?.attachments || [], // Aggiungiamo l'array di attachments vuoto
+      // Assicuriamoci di fare una deep copy degli allegati
+      attachments: attachments.map(att => ({...att}))
     };
 
+    console.log("Salvataggio evento con allegati:", updatedEvent.attachments.length);
+    
     onSave(updatedEvent);
-    onClose();
+    setIsEditMode(false);
+  };
+
+  const handleCancel = () => {
+    if (isEditMode) {
+      // Se siamo in modalità modifica e annulliamo, torniamo allo stato originale
+      if (event) {
+        setTitle(event.title);
+        setDescription(event.description || "");
+        setStartTime(new Date(event.start));
+        setEndTime(new Date(event.end));
+        setSelectedUserIds([...event.userIds]);
+        setEventType(event.type || 'impegno');
+        setAttachments(event.attachments ? [...event.attachments.map(att => ({...att}))] : []);
+      }
+      setIsEditMode(false);
+      setShowFileUpload(false);
+    } else {
+      // Se non siamo in modalità modifica, chiudiamo il dialog
+      onClose();
+    }
   };
 
   const handleDelete = () => {
@@ -94,8 +171,15 @@ const EventDialog = ({
     }
   };
 
-  // Funzione per selezione/deselezione utenti invitati
   const handleToggleUser = (userId: string) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+      });
+      return;
+    }
+    
     setSelectedUserIds((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
@@ -103,14 +187,45 @@ const EventDialog = ({
     );
   };
 
-  if (!isOpen) return null;
+  const handleAddFile = (file: FileAttachment) => {
+    console.log("Aggiunto allegato:", file.name);
+    // Deep copy dell'array esistente + nuovo file
+    setAttachments(prev => [...prev.map(att => ({...att})), {...file}]);
+    setShowFileUpload(false);
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+      });
+      return;
+    }
+    
+    console.log("Rimozione allegato con ID:", fileId);
+    setAttachments(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  const handleViewFile = (file: FileAttachment) => {
+    console.log("Visualizzazione file:", file.name, file.url);
+    if (file.url) {
+      window.open(file.url, "_blank");
+    } else {
+      toast({
+        title: "Errore",
+        description: "URL del file non disponibile",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {event?.id?.startsWith("new-") ? "Nuovo evento" : "Modifica evento"}
+            {!event ? "Nuovo evento" : isEditMode ? "Modifica evento" : "Dettagli evento"}
           </DialogTitle>
           <DialogDescription>
             {(event?.start || startTime) &&
@@ -124,20 +239,30 @@ const EventDialog = ({
             <Label className="text-right">Tipo</Label>
             <RadioGroup
               value={eventType}
-              onValueChange={(value: EventType) => setEventType(value)}
+              onValueChange={(value: EventType) => {
+                if (!isEditMode) {
+                  toast({
+                    title: "Modalità sola lettura",
+                    description: "Clicca su 'Modifica' per abilitare le modifiche",
+                  });
+                  return;
+                }
+                setEventType(value);
+              }}
               className="col-span-3 flex gap-4"
+              disabled={!isEditMode}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="impegno" id="impegno" />
-                <Label htmlFor="impegno">Impegno</Label>
+                <RadioGroupItem value="impegno" id="impegno" disabled={!isEditMode} />
+                <Label htmlFor="impegno" className={!isEditMode ? "opacity-70" : ""}>Impegno</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="appuntamento" id="appuntamento" />
-                <Label htmlFor="appuntamento">Appuntamento</Label>
+                <RadioGroupItem value="appuntamento" id="appuntamento" disabled={!isEditMode} />
+                <Label htmlFor="appuntamento" className={!isEditMode ? "opacity-70" : ""}>Appuntamento</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="promemoria" id="promemoria" />
-                <Label htmlFor="promemoria">Promemoria</Label>
+                <RadioGroupItem value="promemoria" id="promemoria" disabled={!isEditMode} />
+                <Label htmlFor="promemoria" className={!isEditMode ? "opacity-70" : ""}>Promemoria</Label>
               </div>
             </RadioGroup>
           </div>
@@ -157,6 +282,7 @@ const EventDialog = ({
                       : "bg-muted text-foreground border-muted-foreground/30 hover:bg-accent")
                   }
                   onClick={() => handleToggleUser(u.id)}
+                  disabled={!isEditMode}
                 >
                   <UserAvatar user={u} size="sm" />
                   <span className="text-xs">{u.name}</span>
@@ -175,8 +301,18 @@ const EventDialog = ({
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                if (!isEditMode) {
+                  toast({
+                    title: "Modalità sola lettura",
+                    description: "Clicca su 'Modifica' per abilitare le modifiche",
+                  });
+                  return;
+                }
+                setTitle(e.target.value);
+              }}
               className="col-span-3"
+              readOnly={!isEditMode}
             />
           </div>
 
@@ -188,7 +324,16 @@ const EventDialog = ({
               {startTime && (
                 <TimePickerDemo
                   date={startTime}
-                  setDate={setStartTime}
+                  setDate={(date) => {
+                    if (!isEditMode) {
+                      toast({
+                        title: "Modalità sola lettura",
+                        description: "Clicca su 'Modifica' per abilitare le modifiche",
+                      });
+                      return;
+                    }
+                    setStartTime(date);
+                  }}
                 />
               )}
             </div>
@@ -202,7 +347,16 @@ const EventDialog = ({
               {endTime && (
                 <TimePickerDemo
                   date={endTime}
-                  setDate={setEndTime}
+                  setDate={(date) => {
+                    if (!isEditMode) {
+                      toast({
+                        title: "Modalità sola lettura",
+                        description: "Clicca su 'Modifica' per abilitare le modifiche",
+                      });
+                      return;
+                    }
+                    setEndTime(date);
+                  }}
                 />
               )}
             </div>
@@ -215,15 +369,59 @@ const EventDialog = ({
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                if (!isEditMode) {
+                  toast({
+                    title: "Modalità sola lettura",
+                    description: "Clicca su 'Modifica' per abilitare le modifiche",
+                  });
+                  return;
+                }
+                setDescription(e.target.value);
+              }}
               className="col-span-3"
               rows={3}
+              readOnly={!isEditMode}
             />
+          </div>
+
+          {/* Sezione allegati */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right">Allegati</Label>
+            <div className="col-span-3 space-y-2">
+              <div className="flex justify-between items-center">
+                {!showFileUpload && isEditMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFileUpload(true)}
+                    className="flex items-center gap-1 mb-2"
+                  >
+                    <PaperclipIcon className="h-4 w-4" />
+                    Aggiungi allegato
+                  </Button>
+                )}
+              </div>
+              
+              {showFileUpload && (
+                <FileUpload
+                  onFileUploaded={handleAddFile}
+                  onCancel={() => setShowFileUpload(false)}
+                  allowedTypes={['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg']}
+                />
+              )}
+              
+              <FileAttachmentList
+                attachments={attachments}
+                onRemove={handleRemoveFile}
+                onView={handleViewFile}
+              />
+            </div>
           </div>
         </div>
 
         <DialogFooter className="flex justify-between">
-          {event && !event.id.startsWith("new-") && onDelete && (
+          {event && !event.id.startsWith("new-") && onDelete && isEditMode && (
             <Button
               variant="destructive"
               onClick={handleDelete}
@@ -232,12 +430,22 @@ const EventDialog = ({
               Elimina
             </Button>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} type="button">
-              Annulla
+          <div className="flex gap-2 ml-auto">
+            <Button variant="outline" onClick={handleCancel} type="button">
+              {isEditMode ? "Annulla" : "Chiudi"}
             </Button>
-            <Button onClick={handleSave} type="submit">
-              Salva
+            <Button onClick={handleSave} type="submit" className="flex items-center gap-1">
+              {isEditMode ? (
+                <>
+                  <Save className="h-4 w-4" />
+                  Salva
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4" />
+                  Modifica
+                </>
+              )}
             </Button>
           </div>
         </DialogFooter>
