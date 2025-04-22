@@ -32,9 +32,9 @@ export const UserAvatar = ({
   return (
     <div className="flex items-center gap-2">
       <div className="relative">
-        <Avatar className={sizeClass[size]} style={{ borderColor: user.color, borderWidth: '2px' }}>
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback style={{ backgroundColor: user.color+'20', color: user.color }}>
+        <Avatar className={sizeClass[size]} style={{ borderColor: user.color || '#6E56CF', borderWidth: '2px' }}>
+          <AvatarImage src={user.avatar || user.avatarUrl} alt={user.name} />
+          <AvatarFallback style={{ backgroundColor: (user.color || '#6E56CF')+'20', color: user.color || '#6E56CF' }}>
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
