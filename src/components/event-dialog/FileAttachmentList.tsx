@@ -6,15 +6,21 @@ import {
   ImageIcon, 
   FileTextIcon, 
   FileSpreadsheetIcon, 
-  FileX 
+  FileX,
+  Eye
 } from "lucide-react";
 
 interface FileAttachmentListProps {
   attachments: FileAttachment[];
   onRemove: (id: string) => void;
+  onView?: (file: FileAttachment) => void;
 }
 
-export const FileAttachmentList = ({ attachments, onRemove }: FileAttachmentListProps) => {
+export const FileAttachmentList = ({ 
+  attachments, 
+  onRemove,
+  onView 
+}: FileAttachmentListProps) => {
   if (attachments.length === 0) {
     return <div className="text-sm text-muted-foreground">Nessun allegato</div>;
   }
@@ -48,26 +54,38 @@ export const FileAttachmentList = ({ attachments, onRemove }: FileAttachmentList
         >
           <div className="flex items-center space-x-2">
             {getFileIcon(file.type)}
-            <a 
-              href={file.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:underline"
+            <span 
+              className="hover:underline cursor-pointer"
+              onClick={() => onView && onView(file)}
             >
               {file.name}
-            </a>
+            </span>
             <span className="text-xs text-muted-foreground">
               {formatFileSize(file.size)}
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => onRemove(file.id)}
-            className="h-6 w-6"
-          >
-            <FileX className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            {onView && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => onView(file)}
+                className="h-6 w-6 text-blue-600"
+                title="Visualizza file"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onRemove(file.id)}
+              className="h-6 w-6"
+              title="Rimuovi allegato"
+            >
+              <FileX className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ))}
     </div>

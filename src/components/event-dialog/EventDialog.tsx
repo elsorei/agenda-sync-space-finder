@@ -21,8 +21,9 @@ import { EventTypeSelection } from "./EventTypeSelection";
 import { EventDialogProps } from "./types";
 import { FileUpload } from "./FileUpload";
 import { FileAttachmentList } from "./FileAttachmentList";
-import { PaperclipIcon, FileIcon } from "lucide-react";
+import { PaperclipIcon, FileIcon, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/hooks/use-toast";
 
 const EventDialog = ({
   event,
@@ -41,6 +42,7 @@ const EventDialog = ({
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [previewFile, setPreviewFile] = useState<FileAttachment | null>(null);
 
   useEffect(() => {
     if (event) {
@@ -51,6 +53,12 @@ const EventDialog = ({
       setSelectedUserIds(event.userIds || []);
       setEventType(event.type || 'impegno');
       setAttachments(event.attachments || []);
+      
+      // Se ci sono allegati e l'utente sta aprendo un evento esistente,
+      // automaticamente passa alla tab degli allegati
+      if (event.attachments && event.attachments.length > 0 && !event.id.startsWith("new-")) {
+        setActiveTab("attachments");
+      }
     } else {
       resetForm();
     }
@@ -64,6 +72,8 @@ const EventDialog = ({
     setSelectedUserIds([]);
     setEventType('impegno');
     setAttachments([]);
+    setActiveTab("details");
+    setPreviewFile(null);
   };
 
   const handleSave = () => {
@@ -106,6 +116,15 @@ const EventDialog = ({
 
   const handleRemoveAttachment = (fileId: string) => {
     setAttachments(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  const handleViewFile = (file: FileAttachment) => {
+    // Apri il file in una nuova finestra
+    window.open(file.url, '_blank');
+    toast({
+      title: "File aperto",
+      description: `${file.name} è stato aperto in una nuova finestra`,
+    });
   };
 
   if (!isOpen) return null;
@@ -223,11 +242,49 @@ const EventDialog = ({
                 />
               )}
               
-              {/* List of attached files */}
-              <FileAttachmentList 
-                attachments={attachments} 
-                onRemove={handleRemoveAttachment} 
-              />
+              {/* List of attached files with view button */}
+              <div className="space-y-2">
+                {attachments.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">Nessun allegato</div>
+                ) : (
+                  attachments.map((file) => (
+                    <div 
+                      key={file.id} 
+                      className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FileIcon className="h-4 w-4" />
+                        <span className="hover:underline">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleViewFile(file)}
+                          className="h-6 w-6 text-blue-600"
+                          title="Visualizza file"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleRemoveAttachment(file.id)}
+                          className="h-6 w-6 text-destructive"
+                          title="Rimuovi allegato"
+                        >
+                          <FileIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

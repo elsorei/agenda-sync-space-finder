@@ -22,7 +22,14 @@ const Index = () => {
   // Carica eventi per il giorno corrente
   useEffect(() => {
     const mockEvents = generateMockEvents(currentDate);
-    setEvents(mockEvents);
+    
+    // Assicuriamoci che gli eventi abbiano la proprietà attachments
+    const eventsWithAttachments = mockEvents.map(event => ({
+      ...event,
+      attachments: event.attachments || []
+    }));
+    
+    setEvents(eventsWithAttachments);
   }, [currentDate]);
 
   const handleDateChange = (date: Date) => {
@@ -70,7 +77,13 @@ const Index = () => {
 
   // Aggiorna anche edit event: ora un evento può avere più utenti
   const handleEditEvent = (event: Event) => {
-    setSelectedEvent(event);
+    // Assicuriamoci che l'evento abbia la proprietà attachments
+    const eventWithAttachments = {
+      ...event,
+      attachments: event.attachments || []
+    };
+    
+    setSelectedEvent(eventWithAttachments);
     setIsEventDialogOpen(true);
   };
 
