@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
@@ -7,18 +6,20 @@ import { startOfDay, addMinutes } from "date-fns";
 import EventItem from "./calendar/EventItem";
 import TimeSlots from "./calendar/TimeSlots";
 import RemindersList from "./calendar/RemindersList";
+import { useIsMobile } from "@/hooks/use-mobile"; // già presente
 
-const DayView = ({ 
-  date, 
-  users, 
-  events, 
+const DayView = ({
+  date,
+  users,
+  events,
   hourHeight = 60,
   onAddEvent,
-  onEditEvent
+  onEditEvent,
 }: DayViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
-  
+  const isMobile = useIsMobile();
+
   // Separa i promemoria dagli altri eventi
   const reminders = events.filter(event => event.type === 'promemoria');
   const regularEvents = events.filter(event => event.type !== 'promemoria');
@@ -49,19 +50,39 @@ const DayView = ({
     }
   };
 
-  const handleTimeSlotClick = (e: React.MouseEvent | React.TouchEvent, timeString: string) => {
+  // Funzione tap/click di breve durata (solo desktop)
+  const handleTimeSlotClick = (
+    e: React.MouseEvent | React.TouchEvent,
+    timeString: string
+  ) => {
+    if (!onAddEvent) return;
+    if (isMobile) return; // su mobile ignorato, serve long press!
     e.stopPropagation();
     e.preventDefault();
-    
-    if (!onAddEvent) return;
-    
+
     const [hours, minutes] = timeString.split(':').map(Number);
-    
     const newEventStart = new Date(date);
     newEventStart.setHours(hours, minutes, 0, 0);
-    
     const newEventEnd = addMinutes(newEventStart, 30);
-    
+    if (users.length > 0) {
+      onAddEvent([users[0].id], newEventStart, newEventEnd);
+    }
+  };
+
+  // Nuova funzione: solo mobile, long press per creare evento
+  const handleTimeSlotLongPress = (
+    e: React.MouseEvent | React.TouchEvent,
+    timeString: string
+  ) => {
+    if (!onAddEvent) return;
+    if (!isMobile) return; // desktop non qui!
+    e.stopPropagation();
+    e.preventDefault();
+
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const newEventStart = new Date(date);
+    newEventStart.setHours(hours, minutes, 0, 0);
+    const newEventEnd = addMinutes(newEventStart, 30);
     if (users.length > 0) {
       onAddEvent([users[0].id], newEventStart, newEventEnd);
     }
@@ -86,7 +107,7 @@ const DayView = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto border rounded-md bg-white">
+    <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
       <div className="flex">
         {/* Left sidebar with user thumbnails */}
         <div className="w-[100px] flex-shrink-0 border-r pt-[40px]">
@@ -94,14 +115,18 @@ const DayView = ({
             {users.map((user) => (
               <div key={user.id} className="flex flex-col items-center">
                 <UserAvatar user={user} size="sm" />
-                <span className="text-xs mt-1 font-medium text-center">{user.name.split(' ')[0]}</span>
+                <span className="text-xs mt-1 font-medium text-center">
+                  {user.name.split(' ')[0]}
+                </span>
               </div>
             ))}
           </div>
         </div>
-        
         {/* Main calendar grid */}
-        <div className="flex-1 relative" style={{ height: `${16 * hourHeight}px` }}>
+        <div
+          className="flex-1 relative"
+          style={{ height: `${16 * hourHeight}px` }}
+        >
           {/* Promemoria section */}
           <RemindersList
             reminders={reminders}
@@ -115,8 +140,8 @@ const DayView = ({
 
           {/* Regular events */}
           <div className="relative">
-            {regularEvents.map((event, eventIndex) => 
-              event.userIds.map(userId => (
+            {regularEvents.map((event, eventIndex) =>
+              event.userIds.map((userId) => (
                 <EventItem
                   key={`${event.id}-${userId}`}
                   event={event}
@@ -132,16 +157,15 @@ const DayView = ({
               ))
             )}
           </div>
-
           {/* Time indicators with half-hour slots */}
           <TimeSlots
             intervals={halfHourIntervals}
             hourHeight={hourHeight}
             onTimeSlotClick={handleTimeSlotClick}
+            onTimeSlotLongPress={handleTimeSlotLongPress}
           />
-          
           {/* Background for click handling */}
-          <div 
+          <div
             ref={containerRef}
             className="absolute left-0 top-0 w-full h-full touch-none z-0"
             style={{ touchAction: "none" }}
@@ -152,5 +176,4 @@ const DayView = ({
     </div>
   );
 };
-
 export default DayView;
