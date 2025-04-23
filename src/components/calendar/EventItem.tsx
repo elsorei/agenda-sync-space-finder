@@ -78,6 +78,14 @@ const EventItem = ({
     }
   };
 
+  // Centralize all mouse/touch leave handlers to avoid duplicates
+  const handleMouseLeave = () => {
+    if (!isMobile) {
+      longPressHandlers.onMouseLeave && longPressHandlers.onMouseLeave();
+    }
+    onEventMouseLeave();
+  };
+
   return (
     <div
       key={event.id + "-" + mainUserId}
@@ -104,10 +112,9 @@ const EventItem = ({
       onTouchStart={isMobile ? longPressHandlers.onTouchStart : undefined}
       onMouseDown={handleMouseDown}
       onMouseUp={!isMobile ? longPressHandlers.onMouseUp : undefined}
-      onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
+      onMouseLeave={handleMouseLeave}
       onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
-      onMouseLeave={() => onEventMouseLeave()}
       aria-label={`Apri evento: ${event.title}`}
     >
       <div className="flex items-start justify-between h-full">
