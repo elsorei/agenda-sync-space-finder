@@ -1,11 +1,10 @@
 
-import { useRef } from "react";
+import React from "react";
 import { Event, User } from "@/types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
-import { format } from "date-fns";
+import { useCalendarGrid } from "./hooks/useCalendarGrid";
 import EventItem from "./EventItem";
 import RemindersList from "./RemindersList";
+import TimeGrid from "./TimeGrid";
 
 interface CalendarGridProps {
   events: Event[];
@@ -16,7 +15,7 @@ interface CalendarGridProps {
   hoveredEventId: string | null;
   selectedEventId: string | null;
   dragActive: boolean;
-  draggingEvent: any;
+  draggingEvent: { event: Event; yOffset: number } | null;
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
@@ -50,35 +49,21 @@ const CalendarGrid = ({
   onTimeSlotLongPress,
   onBackgroundClick,
 }: CalendarGridProps) => {
-  const isMobile = useIsMobile();
-  const timeSlots = getDayViewHalfHourIntervals(date); // Pass the date parameter
-  const gridRef = useRef<HTMLDivElement>(null);
+  const {
+    gridRef,
+    timeSlots,
+    reminders,
+    appointments,
+    isEventVisible
+  } = useCalendarGrid({
+    events,
+    users,
+    date,
+    selectedEventId,
+    dragActive,
+    draggingEvent
+  });
 
-  const getEventTop = (event: Event) => {
-    const start = new Date(event.start);
-    const hours = start.getHours();
-    const minutes = start.getMinutes();
-    return (hours + minutes / 60 - 7) * hourHeight;
-  };
-
-  const getEventHeight = (event: Event) => {
-    const start = new Date(event.start);
-    const end = new Date(event.end);
-    const duration = end.getTime() - start.getTime();
-    return (duration / (60 * 60 * 1000)) * hourHeight;
-  };
-
-  const isEventDraggable = (event: Event) => {
-    return !isMobile;
-  };
-
-  const reminders = events.filter(event => event.type === 'promemoria');
-  const appointments = events.filter(event => event.type === 'appuntamento' || event.type === 'impegno');
-  
-  // Format date for display
-  const formattedDate = format(date, 'yyyy-MM-dd');
-
-  // Indica se un evento di dialogo è aperto
   const isDialogOpen = selectedEventId !== null && !dragActive;
 
   return (
@@ -110,52 +95,20 @@ const CalendarGrid = ({
             gridTemplateRows: `repeat(17, ${hourHeight}px)`,
           }}
         >
-          {timeSlots.map((timeSlot, index) => {
-            // Format the timeSlot date to a string
-            const timeString = format(timeSlot, 'HH:mm');
-            
-            return (
-              <div
-                key={index}
-                className="relative border-t border-border"
-                style={{
-                  gridRowStart: index + 1,
-                  height: hourHeight,
-                }}
-              >
-                <div className="absolute left-2 top-0.5 text-xs text-muted-foreground">
-                  {timeString}
-                </div>
-                <button
-                  className="absolute inset-0 w-full h-full opacity-0 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed data-[disabled=true]:pointer-events-none"
-                  onClick={(e) => onTimeSlotClick(e, timeString)}
-                  onTouchStart={(e) => onTimeSlotLongPress(e, timeString)}
-                  onMouseDown={(e) => {
-                    if (!isMobile) {
-                      onTimeSlotClick(e, timeString);
-                    }
-                  }}
-                  onContextMenu={(e) => e.preventDefault()}
-                  disabled={isDialogOpen} // Disabilita i click su time slot quando il dialogo è aperto
-                />
-              </div>
-            )
-          })}
+          <TimeGrid
+            timeSlots={timeSlots}
+            hourHeight={hourHeight}
+            onTimeSlotClick={onTimeSlotClick}
+            onTimeSlotLongPress={onTimeSlotLongPress}
+            isDialogOpen={isDialogOpen}
+          />
+          
           {appointments.map((event, index) =>
             event.userIds.map(userId => {
               const user = users.find((user) => user.id === userId);
               if (!user) return null;
-
-              const top = getEventTop(event);
-              const height = getEventHeight(event);
-              const isEventSelected = selectedEventId === event.id;
-              const isEventDragging = dragActive && draggingEvent?.event.id === event.id;
-
-              // Non mostrare gli eventi quando un evento è selezionato (e non si sta trascinando)
-              // CORREZIONE: Ora nascondiamo gli eventi non selezionati quando c'è un evento selezionato
-              if (selectedEventId !== null && !isEventSelected && !isEventDragging) {
-                return null;
-              }
+              
+              if (!isEventVisible(event.id)) return null;
 
               return (
                 <EventItem
@@ -164,17 +117,17 @@ const CalendarGrid = ({
                   mainUserId={userId}
                   users={users}
                   zIndex={1000 + index}
-                  top={`${top}px`}
-                  height={`${height}px`}
+                  top={`${(event.start.getHours() + event.start.getMinutes() / 60 - 7) * hourHeight}px`}
+                  height={`${((new Date(event.end).getTime() - new Date(event.start).getTime()) / (60 * 60 * 1000)) * hourHeight}px`}
                   hourHeight={hourHeight}
                   hoveredEventId={hoveredEventId}
                   onEventClick={onEventClick}
                   onEventMouseEnter={onEventMouseEnter}
                   onEventMouseLeave={onEventMouseLeave}
                   onEventLongPress={onEventLongPress}
-                  isSelected={isEventSelected}
-                  isDragging={isEventDragging}
-                  isDraggable={isEventDraggable(event)}
+                  isSelected={selectedEventId === event.id}
+                  isDragging={dragActive && draggingEvent?.event.id === event.id}
+                  isDraggable={true}
                   onDragStart={onEventDragStart}
                   onDragMove={onEventDrag}
                   onDragEnd={onEventDragEnd}
