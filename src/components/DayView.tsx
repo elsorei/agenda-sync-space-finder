@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
@@ -6,7 +7,18 @@ import { startOfDay, addMinutes } from "date-fns";
 import EventItem from "./calendar/EventItem";
 import TimeSlots from "./calendar/TimeSlots";
 import RemindersList from "./calendar/RemindersList";
-import { useIsMobile } from "@/hooks/use-mobile"; // già presente
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Nuovi helper
+function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
+  const clickedHour = 7 + y / hourHeight;
+  const hour = Math.floor(clickedHour);
+  const minutes = Math.round((clickedHour - hour) * 60 / 30) * 30;
+  const newEventStart = new Date(date);
+  newEventStart.setHours(hour, minutes, 0, 0);
+  const newEventEnd = addMinutes(newEventStart, 30);
+  return { newEventStart, newEventEnd };
+}
 
 const DayView = ({
   date,
@@ -18,6 +30,8 @@ const DayView = ({
 }: DayViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [draggingEvent, setDraggingEvent] = useState<{ event: Event, yOffset: number } | null>(null);
   const isMobile = useIsMobile();
 
   // Separa i promemoria dagli altri eventi
@@ -26,37 +40,16 @@ const DayView = ({
 
   // Get half-hour intervals for the day view
   const halfHourIntervals = getDayViewHalfHourIntervals(date);
-  
-  // Generate the current day's start time
-  const dayStart = startOfDay(date);
-  
-  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || !onAddEvent || e.target !== e.currentTarget) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    
-    const clickedHour = 7 + y / hourHeight;
-    const hour = Math.floor(clickedHour);
-    const minutes = Math.round((clickedHour - hour) * 60 / 30) * 30;
-    
-    const newEventStart = new Date(date);
-    newEventStart.setHours(hour, minutes, 0, 0);
-    
-    const newEventEnd = addMinutes(newEventStart, 60);
-    
-    if (users.length > 0) {
-      onAddEvent([users[0].id], newEventStart, newEventEnd);
-    }
-  };
 
-  // Funzione tap/click di breve durata (solo desktop)
+  // --- Creazione evento SOLO via long press --- //
   const handleTimeSlotClick = (
     e: React.MouseEvent | React.TouchEvent,
     timeString: string
   ) => {
+    // Disabilitato su mobile - solo long press crea!
+    if (isMobile) return;
+    // Solo desktop: click per creare nuovo evento
     if (!onAddEvent) return;
-    if (isMobile) return; // su mobile ignorato, serve long press!
     e.stopPropagation();
     e.preventDefault();
 
@@ -69,13 +62,13 @@ const DayView = ({
     }
   };
 
-  // Nuova funzione: solo mobile, long press per creare evento
   const handleTimeSlotLongPress = (
     e: React.MouseEvent | React.TouchEvent,
     timeString: string
   ) => {
     if (!onAddEvent) return;
-    if (!isMobile) return; // desktop non qui!
+    // SOLO su mobile, long-press crea evento!
+    if (!isMobile) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -87,29 +80,90 @@ const DayView = ({
       onAddEvent([users[0].id], newEventStart, newEventEnd);
     }
   };
-  
-  const handleEventClick = (e: React.MouseEvent, event: Event) => {
-    e.stopPropagation();
+
+  // === Apra la dialog evento SOLO da doppio click/tap === //
+  // Long press su evento = seleziona per drag
+  const handleEventLongPress = (event: Event) => {
+    setSelectedEventId(event.id);
+    setHoveredEventId(event.id);
+    // Visual feedback handled in EventItem
+  };
+
+  // Double tap/click su evento (apre dialog)
+  // La logica è ora in EventItem tramite useDoubleTap, ma qui serve per drag!
+  // drag handlers:
+  const handleEventDragStart = (e: React.TouchEvent | React.MouseEvent, event: Event) => {
+    if (!selectedEventId || selectedEventId !== event.id) return;
+    if (!containerRef.current) return;
+
+    let clientY = e.type === "touchstart"
+      ? (e as React.TouchEvent).touches[0].clientY
+      : (e as React.MouseEvent).clientY;
+
+    // Calcola y rispetto alla griglia
+    const rect = containerRef.current.getBoundingClientRect();
+    const yOffset = clientY - rect.top;
+    setDraggingEvent({ event, yOffset });
+    document.body.style.userSelect = "none";
+  };
+
+  const handleEventDrag = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!draggingEvent || !containerRef.current) return;
     e.preventDefault();
-    
+    // Si potrebbe aggiungere overlay "shadow"...
+    // Opzionale: for future, not now
+  };
+
+  const handleEventDragEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!draggingEvent || !containerRef.current) return;
+
+    let clientY = e.type === "touchend"
+      ? ((e as React.TouchEvent).changedTouches
+          ? (e as React.TouchEvent).changedTouches[0].clientY
+          : (e as React.TouchEvent).touches[0].clientY)
+      : (e as React.MouseEvent).clientY;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const y = clientY - rect.top;
+
+    const { newEventStart, newEventEnd } = getEventTimeByOffset(date, y, hourHeight);
+
+    // Sposta evento
+    if (onAddEvent) {
+      // Togliamo l'evento dalla lista e lo rimettiamo alla nuova ora:
+      // (Qui si potrebbe chiamare una prop onEventMove se si volesse distinguere)
+      const movedEvent = { ...draggingEvent.event, start: newEventStart, end: newEventEnd };
+      // Inoltra come "edita" evento
+      if (movedEvent) {
+        // Si può anche ottimizzare con onMove prop separato
+        setTimeout(() => setSelectedEventId(null), 100);
+        onEditEvent && onEditEvent(movedEvent);
+      }
+    }
+
+    setDraggingEvent(null);
+    document.body.style.userSelect = "";
+  };
+
+  // --- Visualizzazione e interattività agende --- //
+  const handleEventClick = (e: React.MouseEvent, event: Event) => {
+    // Desktop e mobile, double-tap/click gestito in EventItem
     if (onEditEvent) {
-      console.log("Editing event:", event.id, event.title);
       onEditEvent(event);
+      setSelectedEventId(null); // deseleziona eventuale selezione pre-drag
     }
   };
 
-  const handleEventMouseEnter = (eventId: string) => {
-    setHoveredEventId(eventId);
-  };
+  const handleEventMouseEnter = (eventId: string) => setHoveredEventId(eventId);
+  const handleEventMouseLeave = () => setHoveredEventId(null);
 
-  const handleEventMouseLeave = () => {
-    setHoveredEventId(null);
-  };
+  // Sfiorando lo sfondo della griglia NON crea più eventi su mobile
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {};
 
   return (
     <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
       <div className="flex">
-        {/* Left sidebar with user thumbnails */}
+        {/* User sidebar */}
         <div className="w-[100px] flex-shrink-0 border-r pt-[40px]">
           <div className="flex flex-col items-center gap-2 p-2">
             {users.map((user) => (
@@ -126,8 +180,9 @@ const DayView = ({
         <div
           className="flex-1 relative"
           style={{ height: `${16 * hourHeight}px` }}
+          ref={containerRef}
         >
-          {/* Promemoria section */}
+          {/* Promemoria */}
           <RemindersList
             reminders={reminders}
             users={users}
@@ -138,33 +193,49 @@ const DayView = ({
             onEventMouseLeave={handleEventMouseLeave}
           />
 
-          {/* Regular events */}
+          {/* Eventi "normali": */}
           <div className="relative">
             {regularEvents.map((event, eventIndex) =>
               event.userIds.map((userId) => (
-                <EventItem
+                <div
                   key={`${event.id}-${userId}`}
-                  event={event}
-                  mainUserId={userId}
-                  users={users}
-                  zIndex={eventIndex}
-                  hoveredEventId={hoveredEventId}
-                  hourHeight={hourHeight}
-                  onEventClick={handleEventClick}
-                  onEventMouseEnter={handleEventMouseEnter}
-                  onEventMouseLeave={handleEventMouseLeave}
-                />
+                  style={{ touchAction: isMobile ? "none" : undefined }}
+                  onTouchStart={selectedEventId === event.id
+                    ? (e) => handleEventDragStart(e, event)
+                    : undefined}
+                  onTouchMove={draggingEvent && selectedEventId === event.id
+                    ? handleEventDrag
+                    : undefined}
+                  onTouchEnd={draggingEvent && selectedEventId === event.id
+                    ? handleEventDragEnd
+                    : undefined}
+                >
+                  <EventItem
+                    event={event}
+                    mainUserId={userId}
+                    users={users}
+                    zIndex={eventIndex}
+                    hoveredEventId={hoveredEventId}
+                    hourHeight={hourHeight}
+                    onEventClick={handleEventClick}
+                    onEventMouseEnter={handleEventMouseEnter}
+                    onEventMouseLeave={handleEventMouseLeave}
+                    onEventLongPress={isMobile ? handleEventLongPress : undefined}
+                    isSelected={selectedEventId === event.id}
+                    isDragging={!!draggingEvent && selectedEventId === event.id}
+                  />
+                </div>
               ))
             )}
           </div>
-          {/* Time indicators with half-hour slots */}
+          {/* Time indicators + slots */}
           <TimeSlots
             intervals={halfHourIntervals}
             hourHeight={hourHeight}
             onTimeSlotClick={handleTimeSlotClick}
             onTimeSlotLongPress={handleTimeSlotLongPress}
           />
-          {/* Background for click handling */}
+          {/* Sfondo cliccabile ma NON usato su mobile */}
           <div
             ref={containerRef}
             className="absolute left-0 top-0 w-full h-full touch-none z-0"
@@ -176,4 +247,5 @@ const DayView = ({
     </div>
   );
 };
+
 export default DayView;

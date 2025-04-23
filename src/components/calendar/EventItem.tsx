@@ -4,6 +4,10 @@ import { UserAvatar } from "../UserAvatar";
 import { cn } from "@/lib/utils";
 import { PaperclipIcon } from "lucide-react";
 import { formatTime, getEventStyle } from "@/utils/timeUtils";
+import { useLongPress } from "@/hooks/useLongPress";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
 
 interface EventItemProps {
   event: Event;
@@ -15,6 +19,9 @@ interface EventItemProps {
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
+  onEventLongPress?: (event: Event) => void;
+  isSelected?: boolean;
+  isDragging?: boolean;
 }
 
 const EventItem = ({
@@ -26,35 +33,65 @@ const EventItem = ({
   hourHeight,
   onEventClick,
   onEventMouseEnter,
-  onEventMouseLeave
+  onEventMouseLeave,
+  onEventLongPress,
+  isSelected = false,
+  isDragging = false,
 }: EventItemProps) => {
   const eventStyle = getEventStyle(event, hourHeight);
   const user = users.find(u => u.id === mainUserId);
   const hasAttachments = event.attachments && event.attachments.length > 0;
   const isHovered = hoveredEventId === event.id;
-  const effectiveZIndex = isHovered ? 50 : zIndex;
+  const effectiveZIndex = isDragging ? 100 : isHovered ? 50 : zIndex;
+  const isMobile = useIsMobile();
 
+  // Long Press per selezionare (prepara drag)
+  const longPressHandlers = useLongPress(
+    () => {
+      if (onEventLongPress) onEventLongPress(event);
+    },
+    { delay: 500, cancelOnMove: true }
+  );
+
+  // Double Tap/Click per aprire (mobile e desktop)
+  const doubleTapHandler = useDoubleTap((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onEventClick(e as any, event);
+  });
+
+  // Disable text selection during drag
+  const dragClass = isSelected || isDragging ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" : "";
+
+  // Touch events: long press → seleziona, doppio tap → apri dialog
   return (
     <div
       key={event.id + "-" + mainUserId}
       className={cn(
         "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden cursor-pointer hover:shadow-md transition-shadow",
+        dragClass,
         event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400",
         isHovered && "ring-2 ring-primary bg-primary/10"
       )}
       style={{
         top: event.type === 'promemoria' ? 'auto' : eventStyle.top,
         height: eventStyle.height,
-        backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}${isHovered ? '40' : '20'}`,
+        backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}${isHovered || isSelected ? '40' : '20'}`,
         borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
         zIndex: effectiveZIndex
       }}
-      onClick={(e) => onEventClick(e, event)}
+      onClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
+      onDoubleClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
+      onTouchEnd={isMobile ? (e) => doubleTapHandler(e) : undefined}
+      onTouchStart={isMobile ? longPressHandlers.onTouchStart : undefined}
+      onMouseDown={!isMobile ? longPressHandlers.onMouseDown : undefined}
+      onMouseUp={!isMobile ? longPressHandlers.onMouseUp : undefined}
+      onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
+      onTouchMove={!isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
       onMouseLeave={onEventMouseLeave}
-      onTouchStart={() => onEventMouseEnter(event.id)}
-      onTouchEnd={onEventMouseLeave}
       aria-label={`Apri evento: ${event.title}`}
+      // Drag handlers verranno aggiunti dal componente padre solo se selezionato
     >
       <div className="flex items-start justify-between h-full">
         <div className="overflow-hidden flex-1">
@@ -85,6 +122,10 @@ const EventItem = ({
           <UserAvatar user={user} size="sm" />
         )}
       </div>
+      {/* Visualizza overlay se selezionato per drag */}
+      {isSelected && (
+        <div className="absolute top-0 left-0 w-full h-full bg-blue-300/20 border-2 border-blue-400 pointer-events-none rounded-md animate-fade-in" />
+      )}
     </div>
   );
 };
