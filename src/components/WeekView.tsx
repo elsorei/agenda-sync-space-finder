@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Event, User } from "@/types";
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import DayView from "./DayView";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface WeekViewProps {
   date: Date;
@@ -26,17 +27,19 @@ const WeekView = ({ date, users, events, onAddEvent, onEditEvent }: WeekViewProp
           <div className="text-center font-medium p-2 border-b bg-muted/20">
             {format(day, 'EEE dd')}
           </div>
-          <DayView
-            date={day}
-            users={users}
-            events={events.filter(event => {
-              const eventDate = new Date(event.start);
-              return isSameDay(eventDate, day);
-            })}
-            hourHeight={hourHeight}
-            onAddEvent={onAddEvent}
-            onEditEvent={onEditEvent}
-          />
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <DayView
+              date={day}
+              users={users}
+              events={events.filter(event => {
+                const eventDate = new Date(event.start);
+                return isSameDay(eventDate, day);
+              })}
+              hourHeight={hourHeight}
+              onAddEvent={onAddEvent}
+              onEditEvent={onEditEvent}
+            />
+          </ScrollArea>
         </div>
       ))}
     </div>
