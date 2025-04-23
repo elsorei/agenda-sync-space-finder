@@ -1,6 +1,7 @@
+
 // Mantieni l'import esistente
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navigation from './components/Navigation';
+import { Navigation } from './components/Navigation';
 import Index from './pages/Index';
 import Dashboard from './pages/Dashboard';
 import TodoList from './pages/TodoList';
