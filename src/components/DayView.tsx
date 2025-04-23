@@ -93,6 +93,7 @@ const DayView = ({
   // La logica è ora in EventItem tramite useDoubleTap, ma qui serve per drag!
   // drag handlers:
   const handleEventDragStart = (e: React.TouchEvent | React.MouseEvent, event: Event) => {
+    e.stopPropagation();
     if (!selectedEventId || selectedEventId !== event.id) return;
     if (!containerRef.current) return;
 
@@ -108,13 +109,14 @@ const DayView = ({
   };
 
   const handleEventDrag = (e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation();
     if (!draggingEvent || !containerRef.current) return;
-    e.preventDefault();
     // Si potrebbe aggiungere overlay "shadow"...
     // Opzionale: for future, not now
   };
 
   const handleEventDragEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation();
     if (!draggingEvent || !containerRef.current) return;
 
     let clientY = e.type === "touchend"
@@ -147,6 +149,7 @@ const DayView = ({
 
   // --- Visualizzazione e interattività agende --- //
   const handleEventClick = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
     // Desktop e mobile, double-tap/click gestito in EventItem
     if (onEditEvent) {
       onEditEvent(event);
@@ -158,7 +161,13 @@ const DayView = ({
   const handleEventMouseLeave = () => setHoveredEventId(null);
 
   // Sfiorando lo sfondo della griglia NON crea più eventi su mobile
-  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {};
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Su mobile impedisce interazioni indesiderate
+    if (isMobile) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
@@ -200,15 +209,18 @@ const DayView = ({
                 <div
                   key={`${event.id}-${userId}`}
                   style={{ touchAction: isMobile ? "none" : undefined }}
-                  onTouchStart={selectedEventId === event.id
-                    ? (e) => handleEventDragStart(e, event)
-                    : undefined}
-                  onTouchMove={draggingEvent && selectedEventId === event.id
-                    ? handleEventDrag
-                    : undefined}
-                  onTouchEnd={draggingEvent && selectedEventId === event.id
-                    ? handleEventDragEnd
-                    : undefined}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    if (selectedEventId === event.id) handleEventDragStart(e, event);
+                  }}
+                  onTouchMove={(e) => {
+                    e.stopPropagation();
+                    if (draggingEvent && selectedEventId === event.id) handleEventDrag(e);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    if (draggingEvent && selectedEventId === event.id) handleEventDragEnd(e);
+                  }}
                 >
                   <EventItem
                     event={event}
@@ -237,7 +249,6 @@ const DayView = ({
           />
           {/* Sfondo cliccabile ma NON usato su mobile */}
           <div
-            ref={containerRef}
             className="absolute left-0 top-0 w-full h-full touch-none z-0"
             style={{ touchAction: "none" }}
             onClick={handleBackgroundClick}

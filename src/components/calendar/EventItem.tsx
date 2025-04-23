@@ -65,7 +65,8 @@ const EventItem = ({
     ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" 
     : "";
 
-  const handleMobileTouch = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation(); // Impedisce la propagazione agli elementi sottostanti
     if (isMobile) {
       doubleTapHandler(e);
       longPressHandlers.onTouchStart(e);
@@ -73,6 +74,7 @@ const EventItem = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Impedisce la propagazione agli elementi sottostanti
     if (!isMobile) {
       longPressHandlers.onMouseDown(e);
     }
@@ -106,14 +108,29 @@ const EventItem = ({
           : `3px solid ${event.color}`,
         zIndex: effectiveZIndex
       }}
-      onClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
-      onDoubleClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
-      onTouchEnd={isMobile ? (e) => doubleTapHandler(e) : undefined}
-      onTouchStart={isMobile ? longPressHandlers.onTouchStart : undefined}
+      onClick={isMobile ? undefined : (e) => {
+        e.stopPropagation();
+        doubleTapHandler(e);
+      }}
+      onDoubleClick={isMobile ? undefined : (e) => {
+        e.stopPropagation();
+        doubleTapHandler(e);
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        if (isMobile) doubleTapHandler(e);
+      }}
+      onTouchStart={handleTouchStart}
       onMouseDown={handleMouseDown}
-      onMouseUp={!isMobile ? longPressHandlers.onMouseUp : undefined}
+      onMouseUp={(e) => {
+        e.stopPropagation();
+        if (!isMobile) longPressHandlers.onMouseUp();
+      }}
       onMouseLeave={handleMouseLeave}
-      onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
+      onTouchMove={(e) => {
+        e.stopPropagation();
+        if (isMobile) longPressHandlers.onTouchMove();
+      }}
       onMouseEnter={() => onEventMouseEnter(event.id)}
       aria-label={`Apri evento: ${event.title}`}
     >
