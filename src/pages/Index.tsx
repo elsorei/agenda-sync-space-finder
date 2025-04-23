@@ -1,7 +1,7 @@
 import DayView from "@/components/DayView";
 import CalendarHeader from "@/components/CalendarHeader";
 import UsersList from "@/components/UsersList";
-import EventDialog from "@/components/event-dialog/EventDialog";
+import EventDialog from "@/components/events/EventDialog";
 import FreeSlotFinder from "@/components/FreeSlotFinder";
 import { useEventManager } from "@/hooks/useEventManager";
 
