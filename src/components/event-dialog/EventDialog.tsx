@@ -1,207 +1,60 @@
+// GRANULAR & HOOK-BASED EVENT DIALOG COMPONENT
 
-import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EventDialogProps } from "./types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { EventDialogHeader } from "./EventDialogHeader";
 import { EventDialogDetails } from "./EventDialogDetails";
+import { EventDialogGuests } from "./EventDialogGuests";
 import { EventDialogAttachments } from "./EventDialogAttachments";
-import { toast } from "@/hooks/use-toast";
+import { EventDialogActions } from "./EventDialogActions";
+import { useEventDialogState } from "./hooks/useEventDialogState";
 
-export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }: EventDialogProps) => {
-  // Stato locale per form di evento
-  const [title, setTitle] = useState(event?.title || "");
-  const [description, setDescription] = useState(event?.description || "");
-  const [eventType, setEventType] = useState(event?.type || "impegno");
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(event?.userIds || []);
-  const [startTime, setStartTime] = useState<Date | null>(event?.start || null);
-  const [endTime, setEndTime] = useState<Date | null>(event?.end || null);
-  const [attachments, setAttachments] = useState(event?.attachments || []);
-  const [isEditMode, setIsEditMode] = useState(false);
-
-  // Debug degli allegati
-  useEffect(() => {
-    if (event?.attachments) {
-      console.log("EventDialog ricevuto evento:", event.id, "con allegati:", event.attachments.length);
-    }
-  }, [event]);
-
-  // Sincronizza stati locali se l'evento cambia
-  useEffect(() => {
-    if (event) {
-      console.log("EventDialog ricevuto evento:", event.id, "con allegati:", event.attachments?.length || 0);
-      setTitle(event.title || "");
-      setDescription(event.description || "");
-      setEventType(event.type || "impegno");
-      setSelectedUserIds(event.userIds || []);
-      setStartTime(event.start ? new Date(event.start) : null);
-      setEndTime(event.end ? new Date(event.end) : null);
-      
-      // Assicuriamoci di fare una copia profonda degli allegati
-      if (event.attachments && event.attachments.length > 0) {
-        const attachmentsCopy = structuredClone(event.attachments);
-        console.log("Copiati allegati:", attachmentsCopy.length);
-        setAttachments(attachmentsCopy);
-      } else {
-        setAttachments([]);
-      }
-      
-      setIsEditMode(false); // Inizia in modalità visualizzazione
-    } else {
-      // Se è un nuovo evento, impostiamo automaticamente la modalità modifica
-      setIsEditMode(true);
-      setAttachments([]);
-    }
-  }, [event, isOpen]);
-
-  const onToggleUser = (userId: string) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-        variant: "default",
-      });
-      return;
-    }
-    
-    setSelectedUserIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
-    );
-  };
-
-  const handleAddAttachment = (file: typeof attachments[number]) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-        variant: "default",
-      });
-      return;
-    }
-    
-    console.log("Aggiunto allegato:", file.name);
-    setAttachments((prev) => [...prev, file]);
-  };
-
-  const handleRemoveAttachment = (id: string) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-        variant: "default",
-      });
-      return;
-    }
-    
-    console.log("Rimosso allegato con ID:", id);
-    setAttachments((prev) => prev.filter((file) => file.id !== id));
-  };
-
-  const handleViewFile = (file: typeof attachments[number]) => {
-    // Apri il file in una nuova finestra o scheda - possiamo permetterlo anche in modalità sola lettura
-    console.log("Visualizzo allegato:", file.name, file.url);
-    if (file.url) {
-      window.open(file.url, "_blank");
-    } else {
-      toast({
-        title: "Errore",
-        description: "URL del file non disponibile",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSave = () => {
-    if (!isEditMode) {
-      // Abilitiamo la modalità modifica se non lo è già
-      setIsEditMode(true);
-      toast({
-        title: "Modalità modifica",
-        description: "Ora puoi modificare l'evento",
-      });
-      return;
-    }
-
-    if (!startTime || !endTime) {
-      toast({
-        title: "Errore",
-        description: "Devi selezionare un orario di inizio e fine valido.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (selectedUserIds.length === 0) {
-      toast({
-        title: "Errore",
-        description: "Devi selezionare almeno un utente invitato.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (title.trim() === "") {
-      toast({
-        title: "Errore",
-        description: "Il titolo dell'evento non può essere vuoto.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Creazione di una copia profonda di tutti i dati, per evitare riferimenti
-    const updatedEvent = {
-      ...event,
-      id: event?.id || `new-${Date.now()}`,
+export const EventDialog = ({
+  event,
+  users,
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+}: EventDialogProps) => {
+  const {
+    state: {
       title,
+      setTitle,
       description,
-      type: eventType,
-      userIds: [...selectedUserIds],
-      start: new Date(startTime.getTime()),
-      end: new Date(endTime.getTime()),
-      attachments: structuredClone(attachments), // Deep copy degli allegati con structuredClone
-    };
+      setDescription,
+      eventType,
+      setEventType,
+      selectedUserIds,
+      setSelectedUserIds,
+      startTime,
+      setStartTime,
+      endTime,
+      setEndTime,
+      attachments,
+      isEditMode,
+    },
+    onToggleUser,
+    addAttachment,
+    removeAttachment,
+    viewAttachment,
+    handleSave,
+    handleCancel,
+    handleDelete,
+  } = useEventDialogState({ event, users, onSave, onDelete, onClose });
 
-    console.log("Salvataggio evento con allegati:", updatedEvent.attachments.length);
-    
-    onSave(updatedEvent);
-    setIsEditMode(false);
-  };
-
-  const handleCancel = () => {
-    if (isEditMode) {
-      // Ricarica i dati originali dell'evento
-      if (event) {
-        setTitle(event.title || "");
-        setDescription(event.description || "");
-        setEventType(event.type || "impegno");
-        setSelectedUserIds(event.userIds || []);
-        setStartTime(event.start || null);
-        setEndTime(event.end || null);
-        
-        // Assicuriamoci di fare una copia profonda degli allegati
-        if (event.attachments && event.attachments.length > 0) {
-          setAttachments([...event.attachments.map(att => ({...att}))]);
-        } else {
-          setAttachments([]);
-        }
-      }
-      setIsEditMode(false);
-      toast({
-        title: "Modifiche annullate",
-        description: "Le modifiche sono state annullate",
-      });
-    } else {
-      onClose();
-    }
-  };
+  const isNewEvent = !event || event.id.startsWith("new-");
+  const isEventDeletable = !!event && !!event.id && !isNewEvent && !!onDelete;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>
-            {!event ? "Nuovo evento" : isEditMode ? "Modifica evento" : "Dettagli evento"}
-          </DialogTitle>
-        </DialogHeader>
+        <EventDialogHeader
+          isNew={isNewEvent}
+          isEditMode={isEditMode}
+          startTime={startTime}
+          eventType={eventType}
+        />
 
         <EventDialogDetails
           eventType={eventType}
@@ -220,41 +73,34 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
           isReadOnly={!isEditMode && !!event}
         />
 
+        {/* Invited users selector (modulare per granità) */}
+        {/* <EventDialogGuests
+          users={users}
+          selectedUserIds={selectedUserIds}
+          onToggleUser={onToggleUser}
+          isReadOnly={!isEditMode && !!event}
+        /> */}
+
         <div className="mt-4">
           <EventDialogAttachments
             attachments={attachments}
-            onAddAttachment={handleAddAttachment}
-            onRemoveAttachment={handleRemoveAttachment}
-            onViewFile={handleViewFile}
+            onAddAttachment={addAttachment}
+            onRemoveAttachment={removeAttachment}
+            onViewFile={viewAttachment}
             isReadOnly={!isEditMode && !!event}
           />
         </div>
 
-        <DialogFooter className="flex justify-between">
-          {/* Mostra sempre il pulsante Elimina se c’è evento e callback onDelete */}
-          {event && !!event.id && onDelete && (
-            <Button
-              variant="destructive"
-              onClick={() => onDelete(event.id)}
-              type="button"
-            >
-              Elimina
-            </Button>
-          )}
-
-          <div className="ml-auto flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              {isEditMode ? "Annulla" : "Chiudi"}
-            </Button>
-            <Button onClick={handleSave}>
-              {isEditMode ? "Salva" : "Modifica"}
-            </Button>
-          </div>
-        </DialogFooter>
+        <EventDialogActions
+          isEditMode={isEditMode}
+          isEventDeletable={isEventDeletable}
+          onCancel={handleCancel}
+          onSave={handleSave}
+          onDelete={isEventDeletable ? handleDelete : undefined}
+        />
       </DialogContent>
     </Dialog>
   );
 };
 
 export default EventDialog;
-
