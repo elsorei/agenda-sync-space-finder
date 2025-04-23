@@ -1,10 +1,10 @@
-
-import { Event, User } from "@/types";
 import { useRef } from "react";
-import EventItem from "./EventItem";
-import TimeSlots from "./TimeSlots";
-import RemindersList from "./RemindersList";
+import { Event, User } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
+import { format } from "date-fns";
+import EventItem from "./EventItem";
+import RemindersList from "./RemindersList";
 
 interface CalendarGridProps {
   events: Event[];
@@ -15,7 +15,7 @@ interface CalendarGridProps {
   hoveredEventId: string | null;
   selectedEventId: string | null;
   dragActive: boolean;
-  draggingEvent: { event: Event, yOffset: number } | null;
+  draggingEvent: any;
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
@@ -49,17 +49,33 @@ const CalendarGrid = ({
   onTimeSlotLongPress,
   onBackgroundClick,
 }: CalendarGridProps) => {
-  // Separate reminders from regular events
+  const isMobile = useIsMobile();
+  const timeSlots = getDayViewHalfHourIntervals();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const getEventTop = (event: Event) => {
+    const start = new Date(event.start);
+    const hours = start.getHours();
+    const minutes = start.getMinutes();
+    return (hours + minutes / 60 - 7) * hourHeight;
+  };
+
+  const getEventHeight = (event: Event) => {
+    const start = new Date(event.start);
+    const end = new Date(event.end);
+    const duration = end.getTime() - start.getTime();
+    return (duration / (60 * 60 * 1000)) * hourHeight;
+  };
+
+  const isEventDraggable = (event: Event) => {
+    return !isMobile;
+  };
+
   const reminders = events.filter(event => event.type === 'promemoria');
-  const regularEvents = events.filter(event => event.type !== 'promemoria');
-  
+  const appointments = events.filter(event => event.type === 'appuntamento' || event.type === 'impegno');
+
   return (
-    <div
-      className="flex-1 relative"
-      style={{ height: `${16 * hourHeight}px` }}
-      ref={containerRef}
-    >
-      {/* Promemoria */}
+    <div className="flex flex-col h-full w-full">
       <RemindersList
         reminders={reminders}
         users={users}
@@ -68,48 +84,86 @@ const CalendarGrid = ({
         onEventClick={onEventClick}
         onEventMouseEnter={onEventMouseEnter}
         onEventMouseLeave={onEventMouseLeave}
+        onEventLongPress={onEventLongPress}
       />
-
-      {/* Regular events */}
-      <div className="relative">
-        {regularEvents.map((event, eventIndex) =>
-          event.userIds.map((userId) => (
-            <EventItem
-              key={`${event.id}-${userId}`}
-              event={event}
-              mainUserId={userId}
-              users={users}
-              zIndex={eventIndex}
-              hoveredEventId={hoveredEventId}
-              hourHeight={hourHeight}
-              onEventClick={onEventClick}
-              onEventMouseEnter={onEventMouseEnter}
-              onEventMouseLeave={onEventMouseLeave}
-              onEventLongPress={onEventLongPress}
-              isSelected={selectedEventId === event.id}
-              isDragging={dragActive && draggingEvent?.event.id === event.id}
-              onDragStart={(e) => onEventDragStart(e, event)}
-              onDragMove={onEventDrag}
-              onDragEnd={onEventDragEnd}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Time slots */}
-      <TimeSlots
-        intervals={getDayViewHalfHourIntervals(date)}
-        hourHeight={hourHeight}
-        onTimeSlotClick={onTimeSlotClick}
-        onTimeSlotLongPress={onTimeSlotLongPress}
-      />
-
-      {/* Clickable background */}
       <div
-        className="absolute left-0 top-0 w-full h-full touch-none z-0"
-        style={{ touchAction: "none" }}
+        ref={containerRef}
+        className="relative flex-1 overflow-y-auto touch-pan-y"
         onClick={onBackgroundClick}
-      />
+      >
+        <div
+          ref={gridRef}
+          className="relative grid"
+          style={{
+            gridTemplateRows: `repeat(17, ${hourHeight}px)`,
+          }}
+        >
+          {timeSlots.map((timeSlot, index) => (
+            <div
+              key={index}
+              className="relative border-t border-border"
+              style={{
+                gridRowStart: index + 1,
+                height: hourHeight,
+              }}
+            >
+              <div className="absolute left-2 top-0.5 text-xs text-muted-foreground">
+                {timeSlot}
+              </div>
+              <button
+                className="absolute inset-0 w-full h-full opacity-0 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed data-[disabled=true]:pointer-events-none"
+                onClick={(e) => {
+                  onTimeSlotClick(e, timeSlot);
+                }}
+                onTouchStart={(e) => {
+                  onTimeSlotLongPress(e, timeSlot);
+                }}
+                onMouseDown={(e) => {
+                  if (!isMobile) {
+                    onTimeSlotClick(e, timeSlot);
+                  }
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
+          ))}
+          {appointments.map((event, index) =>
+            event.userIds.map(userId => {
+              const user = users.find((user) => user.id === userId);
+              if (!user) return null;
+
+              const top = getEventTop(event);
+              const height = getEventHeight(event);
+              const isSelected = selectedEventId === event.id;
+              const isDragging = dragActive && draggingEvent?.event.id === event.id;
+
+              return (
+                <EventItem
+                  key={`${event.id}-${userId}`}
+                  event={event}
+                  mainUserId={userId}
+                  users={users}
+                  zIndex={1000 + index}
+                  top={top}
+                  height={height}
+                  hourHeight={hourHeight}
+                  hoveredEventId={hoveredEventId}
+                  onEventClick={onEventClick}
+                  onEventMouseEnter={onEventMouseEnter}
+                  onEventMouseLeave={onEventMouseLeave}
+                  onEventLongPress={onEventLongPress}
+                  isSelected={isSelected}
+                  isDraggable={isEventDraggable(event)}
+                  isDragging={isDragging}
+                  onDragStart={onEventDragStart ? (e) => onEventDragStart(e, event) : undefined}
+                  onDragMove={onEventDrag ? (e) => onEventDrag(e) : undefined}
+                  onDragEnd={onEventDragEnd ? (e) => onEventDragEnd(e) : undefined}
+                />
+              );
+            })
+          )}
+        </div>
+      </div>
     </div>
   );
 };
