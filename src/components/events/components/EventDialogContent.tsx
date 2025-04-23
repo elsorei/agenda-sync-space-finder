@@ -80,8 +80,7 @@ export const EventDialogContent = ({
           attachments={state.attachments}
           onAddAttachment={handlers.handleAddFile}
           onRemoveAttachment={handlers.handleRemoveFile}
-          showFileUpload={state.showFileUpload}
-          setShowFileUpload={handlers.setShowFileUpload}
+          onViewFile={(file) => window.open(file.url, "_blank")}
           isReadOnly={!state.isEditMode}
         />
       </div>
