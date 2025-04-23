@@ -1,3 +1,4 @@
+
 import { Event, User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
 import { cn } from "@/lib/utils";
@@ -147,7 +148,7 @@ const EventItem = ({
   };
 
   // Gestione opzioni spostamento/copia
-  const handleMove = (e: Event) => {
+  const handleMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
     toast({
       title: "Sposta evento",
@@ -155,7 +156,7 @@ const EventItem = ({
     });
   };
 
-  const handleCopy = (e: Event) => {
+  const handleCopy = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
     toast({
       title: "Copia evento",
@@ -239,11 +240,11 @@ const EventItem = ({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onSelect={(e: any) => handleMove(e)} className="cursor-pointer">
+        <ContextMenuItem onSelect={(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => handleMove(e)} className="cursor-pointer">
           <MoveIcon className="mr-2 h-4 w-4" />
           <span>Sposta</span>
         </ContextMenuItem>
-        <ContextMenuItem onSelect={(e: any) => handleCopy(e)} className="cursor-pointer">
+        <ContextMenuItem onSelect={(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => handleCopy(e)} className="cursor-pointer">
           <CopyIcon className="mr-2 h-4 w-4" />
           <span>Copia</span>
         </ContextMenuItem>
