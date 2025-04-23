@@ -59,7 +59,7 @@ export const EventDialog = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl bg-background">
         <EventDialogHeader
           isNew={isNewEvent}
           isEditMode={isEditMode}

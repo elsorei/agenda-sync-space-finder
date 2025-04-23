@@ -129,4 +129,5 @@ export const Navigation = () => {
   );
 };
 
+// Esportiamo sia come default che come export nominato per compatibilità
 export default Navigation;
