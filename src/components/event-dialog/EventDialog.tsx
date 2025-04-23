@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { EventDialogProps } from "./types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -256,3 +257,4 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
 };
 
 export default EventDialog;
+
