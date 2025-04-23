@@ -50,9 +50,8 @@ const TimeSlots = ({
               className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
               style={{ touchAction: "manipulation" }}
               aria-label={`Seleziona orario ${timeStr}`}
-              // Tap breve: solo desktop, su mobile non crea evento (serve long press)
               onClick={
-                !onTimeSlotLongPress // Se non c'è il long press, allora onClick default
+                !onTimeSlotLongPress
                   ? (e) => onTimeSlotClick(e, timeStr)
                   : undefined
               }
@@ -66,4 +65,3 @@ const TimeSlots = ({
 };
 
 export default TimeSlots;
-

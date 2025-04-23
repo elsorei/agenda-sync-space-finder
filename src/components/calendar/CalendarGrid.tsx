@@ -4,6 +4,7 @@ import { useRef } from "react";
 import EventItem from "./EventItem";
 import TimeSlots from "./TimeSlots";
 import RemindersList from "./RemindersList";
+import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
 
 interface CalendarGridProps {
   events: Event[];
@@ -69,7 +70,7 @@ const CalendarGrid = ({
         onEventMouseLeave={onEventMouseLeave}
       />
 
-      {/* Eventi "normali": */}
+      {/* Regular events */}
       <div className="relative">
         {regularEvents.map((event, eventIndex) =>
           event.userIds.map((userId) => (
@@ -95,7 +96,7 @@ const CalendarGrid = ({
         )}
       </div>
 
-      {/* Time indicators + slots */}
+      {/* Time slots */}
       <TimeSlots
         intervals={getDayViewHalfHourIntervals(date)}
         hourHeight={hourHeight}
@@ -103,7 +104,7 @@ const CalendarGrid = ({
         onTimeSlotLongPress={onTimeSlotLongPress}
       />
 
-      {/* Sfondo cliccabile ma NON usato su mobile */}
+      {/* Clickable background */}
       <div
         className="absolute left-0 top-0 w-full h-full touch-none z-0"
         style={{ touchAction: "none" }}
