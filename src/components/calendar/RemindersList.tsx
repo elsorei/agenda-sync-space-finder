@@ -10,6 +10,8 @@ interface RemindersListProps {
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
+  // Add missing props that EventItem needs
+  onEventLongPress: (event: Event) => void;
 }
 
 const RemindersList = ({
@@ -19,7 +21,8 @@ const RemindersList = ({
   hourHeight,
   onEventClick,
   onEventMouseEnter,
-  onEventMouseLeave
+  onEventMouseLeave,
+  onEventLongPress
 }: RemindersListProps) => {
   if (reminders.length === 0) return null;
 
@@ -40,6 +43,12 @@ const RemindersList = ({
               onEventClick={onEventClick}
               onEventMouseEnter={onEventMouseEnter}
               onEventMouseLeave={onEventMouseLeave}
+              onEventLongPress={onEventLongPress}
+              isSelected={false}
+              isDragging={false}
+              onDragStart={() => {}}
+              onDragMove={() => {}}
+              onDragEnd={() => {}}
             />
           ))
         )}
