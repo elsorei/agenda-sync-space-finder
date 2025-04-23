@@ -2,6 +2,9 @@
 import { toast } from "@/hooks/use-toast";
 import { Event, User, EventType } from "@/types";
 import { FileAttachment } from "@/types/files";
+import { useAttachmentActions } from "./useAttachmentActions";
+import { useUserSelection } from "./useUserSelection";
+import { useEventValidation } from "./useEventValidation";
 
 interface UseEventDialogActionsProps {
   state: {
@@ -35,68 +38,25 @@ export const useEventDialogActions = ({
   onDelete,
   onClose
 }: UseEventDialogActionsProps) => {
-  const {
-    title, setTitle, description, setDescription,
-    eventType, setEventType, selectedUserIds, setSelectedUserIds,
-    startTime, setStartTime, endTime, setEndTime,
-    attachments, setAttachments, isEditMode, setIsEditMode,
-    users, event
-  } = state;
+  const { isEditMode, setIsEditMode, event } = state;
 
-  // Gestione dell'aggiunta di un utente all'evento
-  const onToggleUser = (userId: string) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-      });
-      return;
-    }
-    setSelectedUserIds(prev =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
-  };
+  const attachmentActions = useAttachmentActions({
+    isEditMode,
+    setAttachments: state.setAttachments
+  });
 
-  // Gestione dell'aggiunta di un allegato
-  const addAttachment = (file: FileAttachment) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-      });
-      return;
-    }
-    setAttachments(prev => [...prev, { ...file }]);
-  };
+  const userSelectionActions = useUserSelection({
+    isEditMode,
+    setSelectedUserIds: state.setSelectedUserIds
+  });
 
-  // Gestione della rimozione di un allegato
-  const removeAttachment = (id: string) => {
-    if (!isEditMode) {
-      toast({
-        title: "Modalità sola lettura",
-        description: "Clicca su 'Modifica' per abilitare le modifiche",
-      });
-      return;
-    }
-    setAttachments(prev => prev.filter((file) => file.id !== id));
-  };
+  const validation = useEventValidation({
+    title: state.title,
+    startTime: state.startTime,
+    endTime: state.endTime,
+    selectedUserIds: state.selectedUserIds
+  });
 
-  // Gestione della visualizzazione di un allegato
-  const viewAttachment = (file: FileAttachment) => {
-    if (file.url) {
-      window.open(file.url, "_blank");
-    } else {
-      toast({
-        title: "Errore",
-        description: "URL del file non disponibile",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Funzione di salvataggio o attivazione della modalità modifica
   const handleSave = () => {
     if (!isEditMode) {
       setIsEditMode(true);
@@ -107,72 +67,44 @@ export const useEventDialogActions = ({
       return;
     }
 
-    // Validazioni dei campi obbligatori
-    if (!startTime || !endTime) {
-      toast({
-        title: "Errore",
-        description: "Devi selezionare un orario di inizio e fine valido.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (selectedUserIds.length === 0) {
-      toast({
-        title: "Errore",
-        description: "Devi selezionare almeno un utente invitato.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (title.trim() === "") {
-      toast({
-        title: "Errore",
-        description: "Il titolo dell'evento non può essere vuoto.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validation.validateEvent()) return;
 
-    // Creazione dell'evento aggiornato
     const updatedEvent: Event = {
       ...event,
       id: event?.id || `new-${Date.now()}`,
-      title,
-      description,
-      type: eventType,
-      userIds: [...selectedUserIds],
-      start: startTime ? new Date(startTime.getTime()) : new Date(),
-      end: endTime ? new Date(endTime.getTime()) : new Date(),
+      title: state.title,
+      description: state.description,
+      type: state.eventType,
+      userIds: [...state.selectedUserIds],
+      start: state.startTime ? new Date(state.startTime.getTime()) : new Date(),
+      end: state.endTime ? new Date(state.endTime.getTime()) : new Date(),
       color: event?.color || "#9b87f5",
-      attachments: attachments.map((a) => ({ ...a })),
+      attachments: state.attachments.map((a) => ({ ...a })),
     };
 
     onSave(updatedEvent);
     setIsEditMode(false);
   };
 
-  // Funzione di annullamento modifiche o chiusura dialog
   const handleCancel = () => {
     if (isEditMode) {
       if (event) {
-        // Riporta ai valori originali
-        setTitle(event.title || "");
-        setDescription(event.description || "");
-        setEventType(event.type || "impegno");
-        setSelectedUserIds(event.userIds || []);
-        setStartTime(event.start ? new Date(event.start) : null);
-        setEndTime(event.end ? new Date(event.end) : null);
-        setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
+        state.setTitle(event.title || "");
+        state.setDescription(event.description || "");
+        state.setEventType(event.type || "impegno");
+        state.setSelectedUserIds(event.userIds || []);
+        state.setStartTime(event.start ? new Date(event.start) : null);
+        state.setEndTime(event.end ? new Date(event.end) : null);
+        state.setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
         setIsEditMode(false);
       } else {
-        // Evento nuovo, reset dei campi
-        setTitle("");
-        setDescription("");
-        setEventType("impegno");
-        setSelectedUserIds([]);
-        setStartTime(null);
-        setEndTime(null);
-        setAttachments([]);
+        state.setTitle("");
+        state.setDescription("");
+        state.setEventType("impegno");
+        state.setSelectedUserIds([]);
+        state.setStartTime(null);
+        state.setEndTime(null);
+        state.setAttachments([]);
         setIsEditMode(true);
       }
       toast({
@@ -180,12 +112,10 @@ export const useEventDialogActions = ({
         description: "Le modifiche sono state annullate.",
       });
     } else {
-      // Chiudi il dialog se non in modalità modifica
       onClose();
     }
   };
 
-  // Funzione per eliminare un evento
   const handleDelete = () => {
     if (event && onDelete) {
       onDelete(event.id);
@@ -194,10 +124,8 @@ export const useEventDialogActions = ({
   };
 
   return {
-    onToggleUser,
-    addAttachment,
-    removeAttachment,
-    viewAttachment,
+    ...attachmentActions,
+    ...userSelectionActions,
     handleSave,
     handleCancel,
     handleDelete,
