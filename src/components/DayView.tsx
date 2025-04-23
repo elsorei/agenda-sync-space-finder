@@ -31,6 +31,7 @@ const DayView = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>(users.map(u => u.id));
   const { draggingEvent, setDraggingEvent, dragActive, setDragActive } = useDayViewDrag();
   const isMobile = useIsMobile();
 
@@ -157,7 +158,17 @@ const DayView = ({
   return (
     <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
       <div className="flex">
-        <UserSidebar users={users} />
+        <UserSidebar 
+          users={users} 
+          selectedUsers={selectedUsers}
+          onUserSelect={(userId) => {
+            setSelectedUsers(prev => 
+              prev.includes(userId) 
+                ? prev.filter(id => id !== userId)
+                : [...prev, userId]
+            );
+          }}
+        />
         <CalendarGrid
           events={events}
           users={users}
@@ -180,16 +191,23 @@ const DayView = ({
           onBackgroundClick={handleBackgroundClick}
         />
       </div>
-      <RemindersList 
-        reminders={reminders}
-        users={users}
-        hoveredEventId={hoveredEventId}
-        hourHeight={hourHeight}
-        onEventClick={handleEventClick}
-        onEventMouseEnter={setHoveredEventId}
-        onEventMouseLeave={() => setHoveredEventId(null)}
-        onEventLongPress={handleEventLongPress}
-      />
+      {reminders.length > 0 && (
+        <RemindersList 
+          reminders={reminders}
+          users={users}
+          hoveredEventId={hoveredEventId}
+          hourHeight={hourHeight}
+          onEventClick={handleEventClick}
+          onEventMouseEnter={setHoveredEventId}
+          onEventMouseLeave={() => setHoveredEventId(null)}
+          onEventLongPress={handleEventLongPress}
+          isSelected={false}
+          isDragging={false}
+          onDragStart={handleEventDragStart}
+          onDragMove={handleEventDrag}
+          onDragEnd={handleEventDragEnd}
+        />
+      )}
     </div>
   );
 };
