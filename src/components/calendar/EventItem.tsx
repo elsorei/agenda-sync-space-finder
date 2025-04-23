@@ -1,10 +1,8 @@
 
+import React from "react";
 import { Event, User } from "@/types";
 import { cn } from "@/lib/utils";
-import { getEventStyle } from "@/utils/timeUtils";
-import { useEventInteractions } from "@/hooks/useEventInteractions";
-import EventItemContent from "./EventItemContent";
-import EventContextMenu from "./EventContextMenu";
+import { useEventInteractionHandlers } from "./hooks/useEventInteractionHandlers";
 
 interface EventItemProps {
   event: Event;
@@ -16,12 +14,12 @@ interface EventItemProps {
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
-  onEventLongPress?: (event: Event) => void;
-  isSelected?: boolean;
-  isDragging?: boolean;
-  onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
-  onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
-  onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
+  onEventLongPress: (event: Event) => void;
+  isSelected: boolean;
+  isDragging: boolean;
+  onDragStart: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
+  onDragMove: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragEnd: (e: React.TouchEvent | React.MouseEvent) => void;
 }
 
 const EventItem = ({
@@ -35,18 +33,13 @@ const EventItem = ({
   onEventMouseEnter,
   onEventMouseLeave,
   onEventLongPress,
-  isSelected = false,
-  isDragging = false,
+  isSelected,
+  isDragging,
   onDragStart,
   onDragMove,
   onDragEnd,
 }: EventItemProps) => {
-  const eventStyle = getEventStyle(event, hourHeight);
-  const user = users.find(u => u.id === mainUserId);
-  const isHovered = hoveredEventId === event.id;
-  const effectiveZIndex = isDragging ? 100 : isHovered ? 50 : zIndex;
-
-  const { handlers } = useEventInteractions({
+  const { handlers, isMobile } = useEventInteractionHandlers({
     event,
     isSelected,
     onEventLongPress,
@@ -56,47 +49,38 @@ const EventItem = ({
     onDragEnd,
   });
 
-  const dragClass = isSelected || isDragging 
-    ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" 
-    : "";
+  // Find user color or fallback
+  const mainUser = users.find((user) => user.id === mainUserId);
+  const bgColor = event.color || (mainUser?.color ?? "#9b87f5");
+
+  const eventStyle: React.CSSProperties = {
+    top: `${((event.start.getHours() * 60 + event.start.getMinutes()) / 60) * hourHeight}px`,
+    height: `${((event.end.getTime() - event.start.getTime()) / 3600000) * hourHeight}px`,
+    zIndex,
+    backgroundColor: bgColor,
+    opacity: isDragging ? 0.7 : 1,
+  };
 
   return (
-    <EventContextMenu>
-      <div
-        key={event.id + "-" + mainUserId}
-        className={cn(
-          "absolute left-[100px] right-4 event-container rounded-md shadow-sm p-2 overflow-hidden cursor-pointer hover:shadow-md transition-shadow",
-          dragClass,
-          event.type === 'promemoria' && "bg-yellow-50 border-l-4 border-l-yellow-400",
-          isHovered && "ring-2 ring-primary bg-primary/10"
-        )}
-        style={{
-          top: event.type === 'promemoria' ? 'auto' : eventStyle.top,
-          height: eventStyle.height,
-          backgroundColor: event.type === 'promemoria' 
-            ? undefined 
-            : `${event.color}${isHovered || isSelected ? '40' : '20'}`,
-          borderLeft: event.type === 'promemoria' 
-            ? undefined 
-            : `3px solid ${event.color}`,
-          zIndex: effectiveZIndex,
-          touchAction: "none"
-        }}
-        {...handlers}
-        onMouseEnter={() => onEventMouseEnter(event.id)}
-        onMouseLeave={onEventMouseLeave}
-        aria-label={`Apri evento: ${event.title}`}
-      >
-        <EventItemContent 
-          event={event} 
-          user={user} 
-          height={parseInt(eventStyle.height.toString())} 
-        />
-        {isSelected && (
-          <div className="absolute top-0 left-0 w-full h-full bg-blue-300/20 border-2 border-blue-400 pointer-events-none rounded-md animate-fade-in" />
-        )}
+    <div
+      className={cn(
+        "absolute left-0 right-0 rounded-md px-2 py-1 text-white cursor-pointer select-none",
+        isSelected ? "ring-2 ring-offset-1 ring-blue-500" : "",
+        hoveredEventId === event.id && !isSelected ? "ring-1 ring-offset-1 ring-gray-400" : ""
+      )}
+      style={eventStyle}
+      onMouseEnter={() => onEventMouseEnter(event.id)}
+      onMouseLeave={onEventMouseLeave}
+      {...handlers}
+    >
+      <div className="flex justify-between items-center">
+        <div className="font-semibold truncate" title={event.title}>{event.title || "(Senza titolo)"}</div>
+        <div className="text-xs ml-2 whitespace-nowrap">
+          {event.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+          {event.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        </div>
       </div>
-    </EventContextMenu>
+    </div>
   );
 };
 
