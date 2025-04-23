@@ -1,23 +1,13 @@
 
 import { useState, useRef } from "react";
-import { DayViewProps, Event } from "@/types";
-import { addMinutes } from "date-fns";
+import { DayViewProps } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDayViewDrag } from "@/hooks/useDayViewDrag";
+import { useDayViewTimeSlots } from "@/hooks/useDayViewTimeSlots";
+import { useDayViewEventHandlers } from "@/hooks/useDayViewEventHandlers";
 import UserSidebar from "./calendar/UserSidebar";
 import CalendarGrid from "./calendar/CalendarGrid";
 import { ScrollArea } from "./ui/scroll-area";
-
-// Helper to calculate time based on vertical position
-function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
-  const clickedHour = 7 + y / hourHeight;
-  const hour = Math.floor(clickedHour);
-  const minutes = Math.round((clickedHour - hour) * 60 / 30) * 30;
-  const newEventStart = new Date(date);
-  newEventStart.setHours(hour, minutes, 0, 0);
-  const newEventEnd = addMinutes(newEventStart, 30);
-  return { newEventStart, newEventEnd };
-}
 
 const DayView = ({
   date,
@@ -32,48 +22,9 @@ const DayView = ({
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>(users.map(u => u.id));
   const { draggingEvent, setDraggingEvent, dragActive, setDragActive } = useDayViewDrag();
+  const { handleTimeSlotClick, handleTimeSlotLongPress } = useDayViewTimeSlots();
+  const { handleEventLongPress, handleEventClick } = useDayViewEventHandlers();
   const isMobile = useIsMobile();
-
-  // === Event handlers === //
-  const handleTimeSlotClick = (
-    e: React.MouseEvent | React.TouchEvent,
-    timeString: string
-  ) => {
-    if (isMobile || selectedEventId !== null) return;
-    if (!onAddEvent) return;
-    e.stopPropagation();
-    e.preventDefault();
-
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const newEventStart = new Date(date);
-    newEventStart.setHours(hours, minutes, 0, 0);
-    const newEventEnd = addMinutes(newEventStart, 30);
-    if (users.length > 0) {
-      onAddEvent([users[0].id], newEventStart, newEventEnd);
-    }
-  };
-
-  const handleTimeSlotLongPress = (
-    e: React.MouseEvent | React.TouchEvent,
-    timeString: string
-  ) => {
-    if (!onAddEvent || !isMobile || selectedEventId !== null) return;
-    e.stopPropagation();
-    e.preventDefault();
-
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const newEventStart = new Date(date);
-    newEventStart.setHours(hours, minutes, 0, 0);
-    const newEventEnd = addMinutes(newEventStart, 30);
-    if (users.length > 0) {
-      onAddEvent([users[0].id], newEventStart, newEventEnd);
-    }
-  };
-
-  const handleEventLongPress = (event: Event) => {
-    setSelectedEventId(event.id);
-    setHoveredEventId(event.id);
-  };
 
   const handleEventDragStart = (e: React.TouchEvent | React.MouseEvent, event: Event) => {
     e.stopPropagation();
@@ -128,15 +79,6 @@ const DayView = ({
     e.preventDefault();
   };
 
-  const handleEventClick = (e: React.MouseEvent, event: Event) => {
-    e.stopPropagation();
-    if (onEditEvent) {
-      onEditEvent(event);
-      // Clear selected ID when opening the complete dialog
-      setSelectedEventId(null);
-    }
-  };
-
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
     setSelectedEventId(null);
     if (isMobile) {
@@ -153,9 +95,7 @@ const DayView = ({
             users={users} 
             selectedUsers={selectedUsers}
             onUserSelect={(userId) => {
-              // Prevent user selection/deselection when an event is selected
               if (selectedEventId !== null) return;
-              
               setSelectedUsers(prev => 
                 prev.includes(userId) 
                   ? prev.filter(id => id !== userId)
@@ -173,9 +113,8 @@ const DayView = ({
             selectedEventId={selectedEventId}
             dragActive={dragActive}
             draggingEvent={draggingEvent}
-            onEventClick={handleEventClick}
+            onEventClick={(e, event) => handleEventClick(e, event, onEditEvent, setSelectedEventId)}
             onEventMouseEnter={(id) => {
-              // Don't highlight events when one is already selected
               if (selectedEventId === null) {
                 setHoveredEventId(id);
               }
@@ -185,12 +124,12 @@ const DayView = ({
                 setHoveredEventId(null);
               }
             }}
-            onEventLongPress={handleEventLongPress}
+            onEventLongPress={(event) => handleEventLongPress(event, setSelectedEventId, setHoveredEventId)}
             onEventDragStart={handleEventDragStart}
             onEventDrag={handleEventDrag}
             onEventDragEnd={handleEventDragEnd}
-            onTimeSlotClick={handleTimeSlotClick}
-            onTimeSlotLongPress={handleTimeSlotLongPress}
+            onTimeSlotClick={(e, timeString) => handleTimeSlotClick(date, users, onAddEvent, isMobile, selectedEventId, timeString, e)}
+            onTimeSlotLongPress={(e, timeString) => handleTimeSlotLongPress(date, users, onAddEvent, isMobile, selectedEventId, timeString, e)}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
