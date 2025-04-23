@@ -1,4 +1,3 @@
-
 import { Event, User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
 import { cn } from "@/lib/utils";
@@ -89,7 +88,6 @@ const EventItem = ({
       onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
       onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
-      onMouseLeave={onEventMouseLeave}
       aria-label={`Apri evento: ${event.title}`}
       // Drag handlers verranno aggiunti dal componente padre solo se selezionato
     >

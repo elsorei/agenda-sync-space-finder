@@ -230,8 +230,13 @@ export const EventDialog = ({ event, users, isOpen, onClose, onSave, onDelete }:
         </div>
 
         <DialogFooter className="flex justify-between">
-          {event && !event.id.startsWith("new-") && onDelete && isEditMode && (
-            <Button variant="destructive" onClick={() => onDelete(event.id)}>
+          {/* Mostra sempre il pulsante Elimina se c’è evento e callback onDelete */}
+          {event && !!event.id && onDelete && (
+            <Button
+              variant="destructive"
+              onClick={() => onDelete(event.id)}
+              type="button"
+            >
               Elimina
             </Button>
           )}
