@@ -26,57 +26,36 @@ const TimeSlots = ({
         const timeStr = format(interval, "HH:mm");
         const isFullHour = timeStr.endsWith(":00");
         
-        // Only setup long press handler if we have the callback and we're on mobile
-        const longPressProps = (onTimeSlotLongPress && isMobile)
-          ? useLongPress(
-              (e) => onTimeSlotLongPress(e, timeStr),
-              { delay: 700, cancelOnMove: true }
-            )
-          : {
-              onMouseDown: undefined,
-              onTouchStart: undefined,
-              onMouseUp: undefined,
-              onMouseLeave: undefined,
-              onTouchEnd: undefined,
-              onTouchMove: undefined
-            };
-
         // Setup double tap handler for mobile
         const doubleTapHandler = useDoubleTap((e) => {
-          if (!isMobile) {
+          if (isMobile) {
             onTimeSlotClick(e, timeStr);
           }
         }, 300);
+
+        // Only setup long press handler if we're on mobile and have the callback
+        const longPressHandler = isMobile && onTimeSlotLongPress
+          ? useLongPress(
+              (e) => {
+                if (isMobile && onTimeSlotLongPress) {
+                  onTimeSlotLongPress(e, timeStr);
+                }
+              },
+              { delay: 700, cancelOnMove: true }
+            )
+          : {
+              onMouseDown: () => {},
+              onTouchStart: () => {},
+              onMouseUp: () => {},
+              onMouseLeave: () => {},
+              onTouchEnd: () => {},
+              onTouchMove: () => {}
+            };
 
         const handleClick = (e: React.MouseEvent) => {
           // Only allow click on desktop, not on mobile
           if (!isMobile) {
             onTimeSlotClick(e, timeStr);
-          }
-        };
-
-        const handleTouchStart = (e: React.TouchEvent) => {
-          if (isMobile) {
-            e.preventDefault();
-            if (longPressProps.onTouchStart) {
-              longPressProps.onTouchStart(e);
-            }
-          }
-        };
-
-        const handleTouchEnd = (e: React.TouchEvent) => {
-          if (isMobile) {
-            e.preventDefault();
-            if (longPressProps.onTouchEnd) {
-              longPressProps.onTouchEnd();
-            }
-            doubleTapHandler(e);
-          }
-        };
-
-        const handleTouchMove = (e: React.TouchEvent) => {
-          if (isMobile && longPressProps.onTouchMove) {
-            longPressProps.onTouchMove();
           }
         };
 
@@ -101,12 +80,16 @@ const TimeSlots = ({
               className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
               aria-label={`Seleziona orario ${timeStr}`}
               onClick={handleClick}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
-              onMouseDown={longPressProps.onMouseDown}
-              onMouseUp={longPressProps.onMouseUp}
-              onMouseLeave={longPressProps.onMouseLeave}
+              onTouchStart={longPressHandler.onTouchStart}
+              onTouchEnd={(e) => {
+                e.preventDefault(); // Prevent the click event from firing
+                longPressHandler.onTouchEnd();
+                // We don't call doubleTapHandler here to prevent accidental time slot selection
+              }}
+              onTouchMove={longPressHandler.onTouchMove}
+              onMouseDown={longPressHandler.onMouseDown}
+              onMouseUp={longPressHandler.onMouseUp}
+              onMouseLeave={longPressHandler.onMouseLeave}
             />
           </div>
         );

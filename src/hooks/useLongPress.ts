@@ -23,18 +23,26 @@ export function useLongPress(
   onTouchMove: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const eventRef = useRef<any>(null);
+  const eventRef = useRef<React.MouseEvent | React.TouchEvent | null>(null);
   const movedRef = useRef(false);
 
   const start = useCallback(
-    (event: any) => {
-      event.persist?.();
-      event.preventDefault?.();
-      
+    (event: React.MouseEvent | React.TouchEvent) => {
+      // Don't prevent default on touch events immediately to allow scrolling
+      // Only make sure the event is stored for later use
       movedRef.current = false;
       eventRef.current = event;
+      
+      // Cancel any existing timeout
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      
+      // Start a new timeout for long press
       timerRef.current = setTimeout(() => {
-        if (!movedRef.current) {
+        if (!movedRef.current && eventRef.current) {
+          // Only now prevent default to avoid triggering other events
+          eventRef.current.preventDefault?.();
           onLongPress(eventRef.current);
         }
       }, delay);
@@ -61,10 +69,7 @@ export function useLongPress(
     onMouseDown: (e) => start(e),
     onMouseUp: clear,
     onMouseLeave: clear,
-    onTouchStart: (e) => {
-      e.preventDefault();
-      start(e);
-    },
+    onTouchStart: (e) => start(e),
     onTouchEnd: clear,
     onTouchMove: handleMove,
   };
