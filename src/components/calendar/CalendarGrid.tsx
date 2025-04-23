@@ -1,3 +1,4 @@
+
 import { useRef } from "react";
 import { Event, User } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -73,6 +74,9 @@ const CalendarGrid = ({
 
   const reminders = events.filter(event => event.type === 'promemoria');
   const appointments = events.filter(event => event.type === 'appuntamento' || event.type === 'impegno');
+  
+  // Format date for display
+  const formattedDate = format(date, 'yyyy-MM-dd');
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -87,9 +91,9 @@ const CalendarGrid = ({
         onEventLongPress={onEventLongPress}
         isSelected={false}
         isDragging={false}
-        onDragStart={() => {}}
-        onDragMove={() => {}}
-        onDragEnd={() => {}}
+        onDragStart={onEventDragStart}
+        onDragMove={onEventDrag}
+        onDragEnd={onEventDragEnd}
       />
       <div
         ref={containerRef}

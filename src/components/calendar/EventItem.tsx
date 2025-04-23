@@ -9,8 +9,9 @@ interface EventItemProps {
   mainUserId: string;
   users: User[];
   zIndex: number;
-  top: string;
-  height: string;
+  top?: string;
+  height?: string;
+  style?: React.CSSProperties;
   hoveredEventId: string | null;
   hourHeight: number;
   onEventClick: (e: React.MouseEvent, event: Event) => void;
@@ -32,6 +33,7 @@ const EventItem = ({
   zIndex,
   top,
   height,
+  style,
   hoveredEventId,
   hourHeight,
   onEventClick,
@@ -59,7 +61,9 @@ const EventItem = ({
   const mainUser = users.find((user) => user.id === mainUserId);
   const bgColor = event.color || (mainUser?.color ?? "#9b87f5");
 
+  // Combine passed style with dynamically generated style
   const eventStyle: React.CSSProperties = {
+    ...(style || {}),
     top,
     height,
     zIndex,

@@ -13,7 +13,7 @@ interface RemindersListProps {
   onEventLongPress: (event: Event) => void;
   isSelected: boolean;
   isDragging: boolean;
-  onDragStart: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragStart: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd: (e: React.TouchEvent | React.MouseEvent) => void;
 }

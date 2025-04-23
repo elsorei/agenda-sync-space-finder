@@ -1,12 +1,13 @@
+
 import { useState, useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { addMinutes } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
 import { useDayViewDrag } from "@/hooks/useDayViewDrag";
-import UserSidebar from "./UserSidebar";
-import CalendarGrid from "./CalendarGrid";
-import RemindersList from "./RemindersList";
+import UserSidebar from "@/components/calendar/UserSidebar";
+import CalendarGrid from "@/components/calendar/CalendarGrid";
+import RemindersList from "@/components/calendar/RemindersList";
 
 // Helper per calcolare l'ora in base alla posizione verticale
 function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
