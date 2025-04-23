@@ -145,7 +145,8 @@ const CalendarGrid = ({
                   mainUserId={userId}
                   users={users}
                   zIndex={1000 + index}
-                  style={{ top: `${top}px`, height: `${height}px` }}
+                  top={`${top}px`}
+                  height={`${height}px`}
                   hourHeight={hourHeight}
                   hoveredEventId={hoveredEventId}
                   onEventClick={onEventClick}
@@ -155,9 +156,9 @@ const CalendarGrid = ({
                   isSelected={isEventSelected}
                   isDragging={isEventDragging}
                   isDraggable={isEventDraggable(event)}
-                  onDragStart={onEventDragStart ? (e) => onEventDragStart(e, event) : undefined}
-                  onDragMove={onEventDrag ? (e) => onEventDrag(e) : undefined}
-                  onDragEnd={onEventDragEnd ? (e) => onEventDragEnd(e) : undefined}
+                  onDragStart={onEventDragStart}
+                  onDragMove={onEventDrag}
+                  onDragEnd={onEventDragEnd}
                 />
               );
             })

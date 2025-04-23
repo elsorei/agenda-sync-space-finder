@@ -9,6 +9,8 @@ interface EventItemProps {
   mainUserId: string;
   users: User[];
   zIndex: number;
+  top: string;
+  height: string;
   hoveredEventId: string | null;
   hourHeight: number;
   onEventClick: (e: React.MouseEvent, event: Event) => void;
@@ -17,6 +19,7 @@ interface EventItemProps {
   onEventLongPress: (event: Event) => void;
   isSelected: boolean;
   isDragging: boolean;
+  isDraggable: boolean;
   onDragStart: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd: (e: React.TouchEvent | React.MouseEvent) => void;
@@ -27,6 +30,8 @@ const EventItem = ({
   mainUserId,
   users,
   zIndex,
+  top,
+  height,
   hoveredEventId,
   hourHeight,
   onEventClick,
@@ -35,11 +40,12 @@ const EventItem = ({
   onEventLongPress,
   isSelected,
   isDragging,
+  isDraggable,
   onDragStart,
   onDragMove,
   onDragEnd,
 }: EventItemProps) => {
-  const { handlers, isMobile } = useEventInteractionHandlers({
+  const { handlers } = useEventInteractionHandlers({
     event,
     isSelected,
     onEventLongPress,
@@ -54,8 +60,8 @@ const EventItem = ({
   const bgColor = event.color || (mainUser?.color ?? "#9b87f5");
 
   const eventStyle: React.CSSProperties = {
-    top: `${((event.start.getHours() * 60 + event.start.getMinutes()) / 60) * hourHeight}px`,
-    height: `${((event.end.getTime() - event.start.getTime()) / 3600000) * hourHeight}px`,
+    top,
+    height,
     zIndex,
     backgroundColor: bgColor,
     opacity: isDragging ? 0.7 : 1,
@@ -66,7 +72,8 @@ const EventItem = ({
       className={cn(
         "absolute left-0 right-0 rounded-md px-2 py-1 text-white cursor-pointer select-none",
         isSelected ? "ring-2 ring-offset-1 ring-blue-500" : "",
-        hoveredEventId === event.id && !isSelected ? "ring-1 ring-offset-1 ring-gray-400" : ""
+        hoveredEventId === event.id && !isSelected ? "ring-1 ring-offset-1 ring-gray-400" : "",
+        isDraggable ? "cursor-move" : ""
       )}
       style={eventStyle}
       onMouseEnter={() => onEventMouseEnter(event.id)}
@@ -76,8 +83,8 @@ const EventItem = ({
       <div className="flex justify-between items-center">
         <div className="font-semibold truncate" title={event.title}>{event.title || "(Senza titolo)"}</div>
         <div className="text-xs ml-2 whitespace-nowrap">
-          {event.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
-          {event.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+          {new Date(event.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>
     </div>
