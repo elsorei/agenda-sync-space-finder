@@ -27,12 +27,19 @@ const TimeSlots = ({
         const isFullHour = timeStr.endsWith(":00");
         
         // Only setup long press handler if we have the callback and we're on mobile
-        const longPressHandlers = (onTimeSlotLongPress && isMobile)
+        const longPressProps = (onTimeSlotLongPress && isMobile)
           ? useLongPress(
               (e) => onTimeSlotLongPress(e, timeStr),
               { delay: 700, cancelOnMove: true }
             )
-          : {};
+          : {
+              onMouseDown: undefined,
+              onTouchStart: undefined,
+              onMouseUp: undefined,
+              onMouseLeave: undefined,
+              onTouchEnd: undefined,
+              onTouchMove: undefined
+            };
 
         // Setup double tap handler for mobile
         const doubleTapHandler = useDoubleTap((e) => {
@@ -45,6 +52,31 @@ const TimeSlots = ({
           // Only allow click on desktop, not on mobile
           if (!isMobile) {
             onTimeSlotClick(e, timeStr);
+          }
+        };
+
+        const handleTouchStart = (e: React.TouchEvent) => {
+          if (isMobile) {
+            e.preventDefault();
+            if (longPressProps.onTouchStart) {
+              longPressProps.onTouchStart(e);
+            }
+          }
+        };
+
+        const handleTouchEnd = (e: React.TouchEvent) => {
+          if (isMobile) {
+            e.preventDefault();
+            if (longPressProps.onTouchEnd) {
+              longPressProps.onTouchEnd();
+            }
+            doubleTapHandler(e);
+          }
+        };
+
+        const handleTouchMove = (e: React.TouchEvent) => {
+          if (isMobile && longPressProps.onTouchMove) {
+            longPressProps.onTouchMove();
           }
         };
 
@@ -69,29 +101,12 @@ const TimeSlots = ({
               className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
               aria-label={`Seleziona orario ${timeStr}`}
               onClick={handleClick}
-              onTouchStart={(e) => {
-                if (isMobile) {
-                  e.preventDefault();
-                  if (longPressHandlers.onTouchStart) {
-                    longPressHandlers.onTouchStart(e);
-                  }
-                }
-              }}
-              onTouchEnd={(e) => {
-                if (isMobile) {
-                  e.preventDefault();
-                  if (longPressHandlers.onTouchEnd) {
-                    longPressHandlers.onTouchEnd();
-                  }
-                  doubleTapHandler(e);
-                }
-              }}
-              onTouchMove={(e) => {
-                if (isMobile && longPressHandlers.onTouchMove) {
-                  longPressHandlers.onTouchMove();
-                }
-              }}
-              {...longPressHandlers}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchMove}
+              onMouseDown={longPressProps.onMouseDown}
+              onMouseUp={longPressProps.onMouseUp}
+              onMouseLeave={longPressProps.onMouseLeave}
             />
           </div>
         );
