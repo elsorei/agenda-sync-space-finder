@@ -1,6 +1,6 @@
 
 import { useState, useRef } from "react";
-import { DayViewProps } from "@/types";
+import { DayViewProps, Event } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDayViewDrag } from "@/hooks/useDayViewDrag";
 import { useDayViewTimeSlots } from "@/hooks/useDayViewTimeSlots";
@@ -8,6 +8,7 @@ import { useDayViewEventHandlers } from "@/hooks/useDayViewEventHandlers";
 import UserSidebar from "./calendar/UserSidebar";
 import CalendarGrid from "./calendar/CalendarGrid";
 import { ScrollArea } from "./ui/scroll-area";
+import { getEventTimeByOffset } from "@/hooks/useDayViewTimeSlots";
 
 const DayView = ({
   date,
@@ -113,7 +114,7 @@ const DayView = ({
             selectedEventId={selectedEventId}
             dragActive={dragActive}
             draggingEvent={draggingEvent}
-            onEventClick={(e, event) => handleEventClick(e, event, onEditEvent, setSelectedEventId)}
+            onEventClick={(e, event: Event) => handleEventClick(e, event, onEditEvent, setSelectedEventId)}
             onEventMouseEnter={(id) => {
               if (selectedEventId === null) {
                 setHoveredEventId(id);
@@ -124,7 +125,7 @@ const DayView = ({
                 setHoveredEventId(null);
               }
             }}
-            onEventLongPress={(event) => handleEventLongPress(event, setSelectedEventId, setHoveredEventId)}
+            onEventLongPress={(event: Event) => handleEventLongPress(event, setSelectedEventId, setHoveredEventId)}
             onEventDragStart={handleEventDragStart}
             onEventDrag={handleEventDrag}
             onEventDragEnd={handleEventDragEnd}
