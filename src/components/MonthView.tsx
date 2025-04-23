@@ -3,6 +3,7 @@ import { Event, User } from "@/types";
 import { addDays, endOfMonth, format, isSameDay, startOfMonth, startOfWeek } from "date-fns";
 import { it } from "date-fns/locale";
 import { ScrollArea } from "./ui/scroll-area";
+import { useLongPress } from "@/hooks/useLongPress";
 
 interface MonthViewProps {
   date: Date;
@@ -42,24 +43,26 @@ const MonthView = ({ date, users, events, onAddEvent, onEditEvent }: MonthViewPr
           const dayEvents = getDayEvents(day);
           const isCurrentMonth = day.getMonth() === date.getMonth();
 
+          const longPressHandlers = useLongPress(() => {
+            const now = new Date();
+            const newEventStart = new Date(day);
+            newEventStart.setHours(now.getHours());
+            newEventStart.setMinutes(0);
+            const newEventEnd = new Date(newEventStart);
+            newEventEnd.setHours(newEventStart.getHours() + 1);
+            
+            if (users.length > 0) {
+              onAddEvent([users[0].id], newEventStart, newEventEnd);
+            }
+          }, { delay: 700 });
+
           return (
             <div
               key={day.toISOString()}
               className={`min-h-[100px] border p-1 ${
                 isCurrentMonth ? 'bg-background' : 'bg-muted/30'
               }`}
-              onClick={() => {
-                const now = new Date();
-                const newEventStart = new Date(day);
-                newEventStart.setHours(now.getHours());
-                newEventStart.setMinutes(0);
-                const newEventEnd = new Date(newEventStart);
-                newEventEnd.setHours(newEventStart.getHours() + 1);
-                
-                if (users.length > 0) {
-                  onAddEvent([users[0].id], newEventStart, newEventEnd);
-                }
-              }}
+              {...longPressHandlers}
             >
               <div className="text-right text-sm">
                 {format(day, 'd')}
