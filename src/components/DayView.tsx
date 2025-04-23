@@ -7,7 +7,7 @@ import { useDayViewDrag } from "@/hooks/useDayViewDrag";
 import UserSidebar from "./calendar/UserSidebar";
 import CalendarGrid from "./calendar/CalendarGrid";
 
-// Helper per calcolare l'ora in base alla posizione verticale
+// Helper to calculate time based on vertical position
 function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
   const clickedHour = 7 + y / hourHeight;
   const hour = Math.floor(clickedHour);
@@ -131,7 +131,7 @@ const DayView = ({
     e.stopPropagation();
     if (onEditEvent) {
       onEditEvent(event);
-      // Puliamo l'ID selezionato quando apriamo il dialog completo
+      // Clear selected ID when opening the complete dialog
       setSelectedEventId(null);
     }
   };
@@ -151,7 +151,7 @@ const DayView = ({
           users={users} 
           selectedUsers={selectedUsers}
           onUserSelect={(userId) => {
-            // Evita la selezione/deselezione di utenti quando un evento è selezionato
+            // Prevent user selection/deselection when an event is selected
             if (selectedEventId !== null) return;
             
             setSelectedUsers(prev => 
@@ -173,7 +173,7 @@ const DayView = ({
           draggingEvent={draggingEvent}
           onEventClick={handleEventClick}
           onEventMouseEnter={(id) => {
-            // Non evidenziare gli eventi quando uno è già selezionato
+            // Don't highlight events when one is already selected
             if (selectedEventId === null) {
               setHoveredEventId(id);
             }

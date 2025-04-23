@@ -28,6 +28,9 @@ export function useLongPress(
 
   const start = useCallback(
     (event: any) => {
+      // Prevent accidental activation
+      event.persist?.();
+      
       movedRef.current = false;
       eventRef.current = event;
       timerRef.current = setTimeout(() => {
@@ -45,14 +48,23 @@ export function useLongPress(
     eventRef.current = null;
   }, []);
 
+  const handleMove = useCallback(() => {
+    if (cancelOnMove) {
+      movedRef.current = true;
+      clear();
+    }
+  }, [cancelOnMove, clear]);
+
   return {
     onMouseDown: (e) => start(e),
     onMouseUp: clear,
     onMouseLeave: clear,
-    onTouchStart: (e) => start(e),
-    onTouchEnd: clear,
-    onTouchMove: () => {
-      if (cancelOnMove) movedRef.current = true;
+    onTouchStart: (e) => {
+      // Prevent default behavior to avoid triggering click events
+      e.stopPropagation();
+      start(e);
     },
+    onTouchEnd: clear,
+    onTouchMove: handleMove,
   };
 }

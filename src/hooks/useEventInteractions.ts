@@ -26,22 +26,22 @@ export const useEventInteractions = ({
 }: EventInteractionsProps) => {
   const isMobile = useIsMobile();
 
-  // Configurazione per la pressione prolungata
+  // Configuration for long press handling
   const longPressHandlers = useLongPress(
     (e) => {
       if (onEventLongPress) {
         onEventLongPress(event);
       }
     },
-    { delay: 500, cancelOnMove: false }
+    { delay: 700, cancelOnMove: true }
   );
 
-  // Configurazione per il doppio tap/click
+  // Configuration for double tap/click
   const doubleTapHandler = useDoubleTap((e) => {
     e.stopPropagation();
     e.preventDefault();
     onEventClick(e as React.MouseEvent, event);
-  });
+  }, 300);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
@@ -50,6 +50,7 @@ export const useEventInteractions = ({
       if (isSelected && onDragStart) {
         onDragStart(e, event);
       } else {
+        // Only initiate long press, no immediate action
         longPressHandlers.onTouchStart(e);
       }
     }
@@ -60,7 +61,7 @@ export const useEventInteractions = ({
     if (isMobile && isSelected && onDragMove) {
       onDragMove(e);
     } else if (isMobile) {
-      longPressHandlers.onTouchMove && longPressHandlers.onTouchMove();
+      longPressHandlers.onTouchMove();
     }
   };
 
@@ -69,7 +70,8 @@ export const useEventInteractions = ({
     if (isMobile && isSelected && onDragEnd) {
       onDragEnd(e);
     } else if (isMobile) {
-      longPressHandlers.onTouchEnd && longPressHandlers.onTouchEnd();
+      longPressHandlers.onTouchEnd();
+      // Handle double tap separately from regular touch
       doubleTapHandler(e);
     }
   };
@@ -98,7 +100,7 @@ export const useEventInteractions = ({
     if (!isMobile && isSelected && onDragEnd) {
       onDragEnd(e);
     } else if (!isMobile) {
-      longPressHandlers.onMouseUp && longPressHandlers.onMouseUp();
+      longPressHandlers.onMouseUp();
     }
   };
 
@@ -111,11 +113,15 @@ export const useEventInteractions = ({
       onMouseMove: handleMouseMove,
       onMouseUp: handleMouseUp,
       onClick: (e: React.MouseEvent) => {
+        // Prevent regular click from creating events
         e.stopPropagation();
       },
       onDoubleClick: (e: React.MouseEvent) => {
+        // Only handle double click on non-mobile
         e.stopPropagation();
-        onEventClick(e, event);
+        if (!isMobile) {
+          onEventClick(e, event);
+        }
       },
     },
     isMobile,

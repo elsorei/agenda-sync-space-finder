@@ -2,34 +2,34 @@
 import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string): boolean {
-  // Stato inizializzato come false per coerenza tra client e server
+  // Initialize as false for consistency between client and server
   const [matches, setMatches] = useState<boolean>(false);
 
   useEffect(() => {
-    // In ambiente server, non abbiamo window
+    // No window in server environment
     if (typeof window === 'undefined') {
       return;
     }
     
-    // Crea un oggetto MediaQueryList
+    // Create MediaQueryList object
     const mediaQuery = window.matchMedia(query);
     
-    // Imposta lo stato con il valore iniziale
+    // Set initial state value
     setMatches(mediaQuery.matches);
     
-    // Definisci il callback per quando il media query cambia
+    // Define callback for when media query changes
     const handler = (event: MediaQueryListEvent) => {
       setMatches(event.matches);
     };
     
-    // Aggiungi l'event listener
+    // Add event listener
     mediaQuery.addEventListener('change', handler);
     
-    // Pulizia: rimuovi l'event listener quando il componente viene smontato
+    // Cleanup: remove event listener when component unmounts
     return () => {
       mediaQuery.removeEventListener('change', handler);
     };
-  }, [query]); // Dipende solo dalla query
+  }, [query]); // Only depends on the query
   
   return matches;
 }

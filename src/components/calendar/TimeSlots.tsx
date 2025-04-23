@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TimeSlotsProps {
   intervals: Date[];
@@ -16,18 +17,28 @@ const TimeSlots = ({
   onTimeSlotClick,
   onTimeSlotLongPress,
 }: TimeSlotsProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="absolute left-0 top-0 w-full h-full pointer-events-auto touch-pan-y">
       {intervals.map((interval, index) => {
         const timeStr = format(interval, "HH:mm");
         const isFullHour = timeStr.endsWith(":00");
-        // Hook ONLY if long press callback is available
-        const longPressHandlers = onTimeSlotLongPress
+        
+        // Only setup long press handler if we have the callback and we're on mobile
+        const longPressHandlers = (onTimeSlotLongPress && isMobile)
           ? useLongPress(
               (e) => onTimeSlotLongPress(e, timeStr),
-              { delay: 500, cancelOnMove: true }
+              { delay: 700, cancelOnMove: true }
             )
           : {};
+
+        const handleClick = (e: React.MouseEvent) => {
+          // Only allow click on desktop, not on mobile
+          if (!isMobile) {
+            onTimeSlotClick(e, timeStr);
+          }
+        };
 
         return (
           <div
@@ -50,11 +61,7 @@ const TimeSlots = ({
               className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
               style={{ touchAction: "manipulation" }}
               aria-label={`Seleziona orario ${timeStr}`}
-              onClick={
-                !onTimeSlotLongPress
-                  ? (e) => onTimeSlotClick(e, timeStr)
-                  : undefined
-              }
+              onClick={handleClick}
               {...longPressHandlers}
             />
           </div>
