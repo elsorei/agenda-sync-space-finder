@@ -1,13 +1,12 @@
-// GRANULAR & HOOK-BASED EVENT DIALOG COMPONENT
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EventDialogProps } from "./types";
 import { EventDialogHeader } from "./EventDialogHeader";
-import { EventDialogDetails } from "./EventDialogDetails";
 import { EventDialogGuests } from "./EventDialogGuests";
+import { EventDialogContent } from "./EventDialogContent";
 import { EventDialogAttachments } from "./EventDialogAttachments";
 import { EventDialogActions } from "./EventDialogActions";
-import { useEventDialogState } from "./hooks/useEventDialogState";
+import { useEventDialogBrain } from "./EventDialogBrain";
 
 export const EventDialog = ({
   event,
@@ -33,6 +32,8 @@ export const EventDialog = ({
       setEndTime,
       attachments,
       isEditMode,
+      event: loadedEvent,
+      users: contextUsers,
     },
     onToggleUser,
     addAttachment,
@@ -41,7 +42,7 @@ export const EventDialog = ({
     handleSave,
     handleCancel,
     handleDelete,
-  } = useEventDialogState({ event, users, onSave, onDelete, onClose });
+  } = useEventDialogBrain({ event, users, onSave, onDelete, onClose });
 
   const isNewEvent = !event || event.id.startsWith("new-");
   const isEventDeletable = !!event && !!event.id && !isNewEvent && !!onDelete;
@@ -55,8 +56,7 @@ export const EventDialog = ({
           startTime={startTime}
           eventType={eventType}
         />
-
-        <EventDialogDetails
+        <EventDialogContent
           eventType={eventType}
           setEventType={setEventType}
           users={users}
@@ -72,15 +72,6 @@ export const EventDialog = ({
           setDescription={setDescription}
           isReadOnly={!isEditMode && !!event}
         />
-
-        {/* Invited users selector (modulare per granità) */}
-        {/* <EventDialogGuests
-          users={users}
-          selectedUserIds={selectedUserIds}
-          onToggleUser={onToggleUser}
-          isReadOnly={!isEditMode && !!event}
-        /> */}
-
         <div className="mt-4">
           <EventDialogAttachments
             attachments={attachments}
@@ -90,7 +81,6 @@ export const EventDialog = ({
             isReadOnly={!isEditMode && !!event}
           />
         </div>
-
         <EventDialogActions
           isEditMode={isEditMode}
           isEventDeletable={isEventDeletable}
@@ -104,3 +94,4 @@ export const EventDialog = ({
 };
 
 export default EventDialog;
+
