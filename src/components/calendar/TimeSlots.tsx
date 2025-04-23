@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TimeSlotsProps {
@@ -33,6 +34,13 @@ const TimeSlots = ({
             )
           : {};
 
+        // Setup double tap handler for mobile
+        const doubleTapHandler = useDoubleTap((e) => {
+          if (!isMobile) {
+            onTimeSlotClick(e, timeStr);
+          }
+        }, 300);
+
         const handleClick = (e: React.MouseEvent) => {
           // Only allow click on desktop, not on mobile
           if (!isMobile) {
@@ -58,10 +66,31 @@ const TimeSlots = ({
               </span>
             )}
             <button
-              className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors touch-manipulation"
-              style={{ touchAction: "manipulation" }}
+              className="absolute left-0 top-0 w-full h-full z-10 hover:bg-blue-100 hover:bg-opacity-20 transition-colors"
               aria-label={`Seleziona orario ${timeStr}`}
               onClick={handleClick}
+              onTouchStart={(e) => {
+                if (isMobile) {
+                  e.preventDefault();
+                  if (longPressHandlers.onTouchStart) {
+                    longPressHandlers.onTouchStart(e);
+                  }
+                }
+              }}
+              onTouchEnd={(e) => {
+                if (isMobile) {
+                  e.preventDefault();
+                  if (longPressHandlers.onTouchEnd) {
+                    longPressHandlers.onTouchEnd();
+                  }
+                  doubleTapHandler(e);
+                }
+              }}
+              onTouchMove={(e) => {
+                if (isMobile && longPressHandlers.onTouchMove) {
+                  longPressHandlers.onTouchMove();
+                }
+              }}
               {...longPressHandlers}
             />
           </div>

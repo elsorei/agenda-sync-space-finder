@@ -1,8 +1,8 @@
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback } from "react";
 
 export type UseLongPressOptions = {
-  delay?: number; // ms
+  delay?: number;
   cancelOnMove?: boolean;
 };
 
@@ -11,7 +11,7 @@ type Callback = (e: React.MouseEvent | React.TouchEvent) => void;
 export function useLongPress(
   onLongPress: Callback,
   {
-    delay = 500,
+    delay = 700,
     cancelOnMove = true,
   }: UseLongPressOptions = {}
 ): {
@@ -28,8 +28,8 @@ export function useLongPress(
 
   const start = useCallback(
     (event: any) => {
-      // Prevent accidental activation
       event.persist?.();
+      event.preventDefault?.();
       
       movedRef.current = false;
       eventRef.current = event;
@@ -43,8 +43,10 @@ export function useLongPress(
   );
 
   const clear = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = undefined;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = undefined;
+    }
     eventRef.current = null;
   }, []);
 
@@ -60,8 +62,7 @@ export function useLongPress(
     onMouseUp: clear,
     onMouseLeave: clear,
     onTouchStart: (e) => {
-      // Prevent default behavior to avoid triggering click events
-      e.stopPropagation();
+      e.preventDefault();
       start(e);
     },
     onTouchEnd: clear,
