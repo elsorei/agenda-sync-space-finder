@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Event, User } from "@/types";
-import { addDays, format, startOfWeek } from "date-fns";
+import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import DayView from "./DayView";
 
 interface WeekViewProps {
@@ -31,9 +31,7 @@ const WeekView = ({ date, users, events, onAddEvent, onEditEvent }: WeekViewProp
             users={users}
             events={events.filter(event => {
               const eventDate = new Date(event.start);
-              return eventDate.getDate() === day.getDate() &&
-                     eventDate.getMonth() === day.getMonth() &&
-                     eventDate.getFullYear() === day.getFullYear();
+              return isSameDay(eventDate, day);
             })}
             hourHeight={hourHeight}
             onAddEvent={onAddEvent}

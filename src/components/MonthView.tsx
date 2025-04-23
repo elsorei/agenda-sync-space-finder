@@ -1,6 +1,6 @@
 
 import { Event, User } from "@/types";
-import { addDays, endOfMonth, format, startOfMonth, startOfWeek } from "date-fns";
+import { addDays, endOfMonth, format, isSameDay, startOfMonth, startOfWeek } from "date-fns";
 import { it } from "date-fns/locale";
 
 interface MonthViewProps {
@@ -25,9 +25,7 @@ const MonthView = ({ date, users, events, onAddEvent, onEditEvent }: MonthViewPr
   const getDayEvents = (day: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start);
-      return eventDate.getDate() === day.getDate() &&
-             eventDate.getMonth() === day.getMonth() &&
-             eventDate.getFullYear() === day.getFullYear();
+      return isSameDay(eventDate, day);
     });
   };
 
