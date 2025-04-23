@@ -85,6 +85,11 @@ const CalendarGrid = ({
         onEventMouseEnter={onEventMouseEnter}
         onEventMouseLeave={onEventMouseLeave}
         onEventLongPress={onEventLongPress}
+        isSelected={false}
+        isDragging={false}
+        onDragStart={() => {}}
+        onDragMove={() => {}}
+        onDragEnd={() => {}}
       />
       <div
         ref={containerRef}
@@ -112,12 +117,8 @@ const CalendarGrid = ({
               </div>
               <button
                 className="absolute inset-0 w-full h-full opacity-0 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed data-[disabled=true]:pointer-events-none"
-                onClick={(e) => {
-                  onTimeSlotClick(e, timeSlot);
-                }}
-                onTouchStart={(e) => {
-                  onTimeSlotLongPress(e, timeSlot);
-                }}
+                onClick={(e) => onTimeSlotClick(e, timeSlot)}
+                onTouchStart={(e) => onTimeSlotLongPress(e, timeSlot)}
                 onMouseDown={(e) => {
                   if (!isMobile) {
                     onTimeSlotClick(e, timeSlot);
@@ -134,8 +135,8 @@ const CalendarGrid = ({
 
               const top = getEventTop(event);
               const height = getEventHeight(event);
-              const isSelected = selectedEventId === event.id;
-              const isDragging = dragActive && draggingEvent?.event.id === event.id;
+              const isEventSelected = selectedEventId === event.id;
+              const isEventDragging = dragActive && draggingEvent?.event.id === event.id;
 
               return (
                 <EventItem
@@ -144,17 +145,16 @@ const CalendarGrid = ({
                   mainUserId={userId}
                   users={users}
                   zIndex={1000 + index}
-                  top={top}
-                  height={height}
+                  style={{ top: `${top}px`, height: `${height}px` }}
                   hourHeight={hourHeight}
                   hoveredEventId={hoveredEventId}
                   onEventClick={onEventClick}
                   onEventMouseEnter={onEventMouseEnter}
                   onEventMouseLeave={onEventMouseLeave}
                   onEventLongPress={onEventLongPress}
-                  isSelected={isSelected}
+                  isSelected={isEventSelected}
+                  isDragging={isEventDragging}
                   isDraggable={isEventDraggable(event)}
-                  isDragging={isDragging}
                   onDragStart={onEventDragStart ? (e) => onEventDragStart(e, event) : undefined}
                   onDragMove={onEventDrag ? (e) => onEventDrag(e) : undefined}
                   onDragEnd={onEventDragEnd ? (e) => onEventDragEnd(e) : undefined}

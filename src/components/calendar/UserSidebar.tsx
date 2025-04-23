@@ -1,22 +1,29 @@
 
 import { User } from "@/types";
-import { UserAvatar } from "../UserAvatar";
 
 interface UserSidebarProps {
   users: User[];
+  selectedUsers: string[];
+  onUserSelect: (userId: string) => void;
 }
 
-const UserSidebar = ({ users }: UserSidebarProps) => {
+const UserSidebar = ({ users, selectedUsers, onUserSelect }: UserSidebarProps) => {
   return (
-    <div className="w-[100px] flex-shrink-0 border-r pt-[40px]">
-      <div className="flex flex-col items-center gap-2 p-2">
-        {users.map((user) => (
-          <div key={user.id} className="flex flex-col items-center">
-            <UserAvatar user={user} size="sm" />
-            <span className="text-xs mt-1 font-medium text-center">
-              {user.name.split(' ')[0]}
-            </span>
-          </div>
+    <div className="w-64 border-r p-4">
+      <h2 className="font-semibold mb-4">Utenti</h2>
+      <div className="space-y-2">
+        {users.map(user => (
+          <button
+            key={user.id}
+            onClick={() => onUserSelect(user.id)}
+            className={`w-full text-left px-3 py-2 rounded ${
+              selectedUsers.includes(user.id) 
+                ? 'bg-primary text-primary-foreground' 
+                : 'hover:bg-accent'
+            }`}
+          >
+            {user.name}
+          </button>
         ))}
       </div>
     </div>

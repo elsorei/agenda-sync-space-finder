@@ -10,8 +10,12 @@ interface RemindersListProps {
   onEventClick: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter: (eventId: string) => void;
   onEventMouseLeave: () => void;
-  // Add missing props that EventItem needs
   onEventLongPress: (event: Event) => void;
+  isSelected: boolean;
+  isDragging: boolean;
+  onDragStart: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragMove: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragEnd: (e: React.TouchEvent | React.MouseEvent) => void;
 }
 
 const RemindersList = ({
@@ -22,37 +26,46 @@ const RemindersList = ({
   onEventClick,
   onEventMouseEnter,
   onEventMouseLeave,
-  onEventLongPress
+  onEventLongPress,
+  isSelected,
+  isDragging,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: RemindersListProps) => {
   if (reminders.length === 0) return null;
 
   return (
-    <div className="sticky top-0 z-50 bg-yellow-50/90 backdrop-blur-sm border-b p-2">
-      <h3 className="text-sm font-medium mb-2">Promemoria del giorno</h3>
-      <div className="space-y-2">
-        {reminders.map((reminder, index) => 
-          reminder.userIds.map(userId => (
+    <div className="border-b p-2 space-y-1">
+      {reminders.map((event, index) =>
+        event.userIds.map(userId => {
+          const user = users.find((u) => u.id === userId);
+          if (!user) return null;
+
+          return (
             <EventItem
-              key={`${reminder.id}-${userId}`}
-              event={reminder}
+              key={`${event.id}-${userId}`}
+              event={event}
               mainUserId={userId}
               users={users}
               zIndex={1000 + index}
-              hoveredEventId={hoveredEventId}
+              style={{ height: `${hourHeight/2}px` }}
               hourHeight={hourHeight}
+              hoveredEventId={hoveredEventId}
               onEventClick={onEventClick}
               onEventMouseEnter={onEventMouseEnter}
               onEventMouseLeave={onEventMouseLeave}
               onEventLongPress={onEventLongPress}
-              isSelected={false}
-              isDragging={false}
-              onDragStart={() => {}}
-              onDragMove={() => {}}
-              onDragEnd={() => {}}
+              isSelected={isSelected}
+              isDragging={isDragging}
+              isDraggable={false}
+              onDragStart={onDragStart}
+              onDragMove={onDragMove}
+              onDragEnd={onDragEnd}
             />
-          ))
-        )}
-      </div>
+          );
+        })
+      )}
     </div>
   );
 };
