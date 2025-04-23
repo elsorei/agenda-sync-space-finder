@@ -65,6 +65,19 @@ const EventItem = ({
     ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" 
     : "";
 
+  const handleMobileTouch = (e: React.TouchEvent) => {
+    if (isMobile) {
+      doubleTapHandler(e);
+      longPressHandlers.onTouchStart(e);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isMobile) {
+      longPressHandlers.onMouseDown(e);
+    }
+  };
+
   return (
     <div
       key={event.id + "-" + mainUserId}
@@ -89,7 +102,7 @@ const EventItem = ({
       onDoubleClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
       onTouchEnd={isMobile ? (e) => doubleTapHandler(e) : undefined}
       onTouchStart={isMobile ? longPressHandlers.onTouchStart : undefined}
-      onMouseDown={!isMobile ? longPressHandlers.onMouseDown : undefined}
+      onMouseDown={handleMouseDown}
       onMouseUp={!isMobile ? longPressHandlers.onMouseUp : undefined}
       onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
       onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}

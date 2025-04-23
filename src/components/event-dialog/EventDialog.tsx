@@ -16,6 +16,8 @@ export const EventDialog = ({
   onSave,
   onDelete,
 }: EventDialogProps) => {
+  console.log("EventDialog rendering with event:", event?.id, "isOpen:", isOpen);
+  
   const {
     state: {
       title,
@@ -25,15 +27,12 @@ export const EventDialog = ({
       eventType,
       setEventType,
       selectedUserIds,
-      setSelectedUserIds,
       startTime,
       setStartTime,
       endTime,
       setEndTime,
       attachments,
       isEditMode,
-      event: loadedEvent,
-      users: contextUsers,
     },
     onToggleUser,
     addAttachment,
@@ -42,9 +41,20 @@ export const EventDialog = ({
     handleSave,
     handleCancel,
     handleDelete,
-  } = useEventDialogBrain({ event, users, onSave, onDelete, onClose });
+    setIsEditMode
+  } = useEventDialogBrain({ 
+    event, 
+    users, 
+    onSave, 
+    onDelete, 
+    onClose 
+  });
 
+  // Determina se l'evento è nuovo basandosi sull'ID
   const isNewEvent = !event || event.id.startsWith("new-");
+  console.log("isNewEvent:", isNewEvent, "isEditMode:", isEditMode);
+  
+  // Determina se l'evento può essere eliminato
   const isEventDeletable = !!event && !!event.id && !isNewEvent && !!onDelete;
   
   return (

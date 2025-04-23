@@ -12,13 +12,13 @@ interface UseEventDialogActionsProps {
     eventType: EventType;
     setEventType: (et: EventType) => void;
     selectedUserIds: string[];
-    setSelectedUserIds: (f: (prev: string[]) => string[]) => void;
+    setSelectedUserIds: (f: ((prev: string[]) => string[]) | string[]) => void;
     startTime: Date | null;
     setStartTime: (date: Date | null) => void;
     endTime: Date | null;
     setEndTime: (date: Date | null) => void;
     attachments: FileAttachment[];
-    setAttachments: (f: (prev: FileAttachment[]) => FileAttachment[]) => void;
+    setAttachments: (f: ((prev: FileAttachment[]) => FileAttachment[]) | FileAttachment[]) => void;
     isEditMode: boolean;
     setIsEditMode: (val: boolean) => void;
     users: User[];
@@ -43,6 +43,7 @@ export const useEventDialogActions = ({
     users, event
   } = state;
 
+  // Gestione dell'aggiunta di un utente all'evento
   const onToggleUser = (userId: string) => {
     if (!isEditMode) {
       toast({
@@ -58,6 +59,7 @@ export const useEventDialogActions = ({
     );
   };
 
+  // Gestione dell'aggiunta di un allegato
   const addAttachment = (file: FileAttachment) => {
     if (!isEditMode) {
       toast({
@@ -69,6 +71,7 @@ export const useEventDialogActions = ({
     setAttachments(prev => [...prev, { ...file }]);
   };
 
+  // Gestione della rimozione di un allegato
   const removeAttachment = (id: string) => {
     if (!isEditMode) {
       toast({
@@ -80,6 +83,7 @@ export const useEventDialogActions = ({
     setAttachments(prev => prev.filter((file) => file.id !== id));
   };
 
+  // Gestione della visualizzazione di un allegato
   const viewAttachment = (file: FileAttachment) => {
     if (file.url) {
       window.open(file.url, "_blank");
@@ -92,6 +96,7 @@ export const useEventDialogActions = ({
     }
   };
 
+  // Funzione di salvataggio o attivazione della modalità modifica
   const handleSave = () => {
     if (!isEditMode) {
       setIsEditMode(true);
@@ -102,6 +107,7 @@ export const useEventDialogActions = ({
       return;
     }
 
+    // Validazioni dei campi obbligatori
     if (!startTime || !endTime) {
       toast({
         title: "Errore",
@@ -127,6 +133,7 @@ export const useEventDialogActions = ({
       return;
     }
 
+    // Creazione dell'evento aggiornato
     const updatedEvent: Event = {
       ...event,
       id: event?.id || `new-${Date.now()}`,
@@ -144,9 +151,11 @@ export const useEventDialogActions = ({
     setIsEditMode(false);
   };
 
+  // Funzione di annullamento modifiche o chiusura dialog
   const handleCancel = () => {
     if (isEditMode) {
       if (event) {
+        // Riporta ai valori originali
         setTitle(event.title || "");
         setDescription(event.description || "");
         setEventType(event.type || "impegno");
@@ -156,6 +165,7 @@ export const useEventDialogActions = ({
         setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
         setIsEditMode(false);
       } else {
+        // Evento nuovo, reset dei campi
         setTitle("");
         setDescription("");
         setEventType("impegno");
@@ -170,10 +180,12 @@ export const useEventDialogActions = ({
         description: "Le modifiche sono state annullate.",
       });
     } else {
+      // Chiudi il dialog se non in modalità modifica
       onClose();
     }
   };
 
+  // Funzione per eliminare un evento
   const handleDelete = () => {
     if (event && onDelete) {
       onDelete(event.id);

@@ -8,6 +8,7 @@ interface UseEventDialogStateProps {
   users: User[];
 }
 
+// Hook per la gestione dello stato del dialog dell'evento
 export const useEventDialogState = ({
   event,
   users
@@ -21,8 +22,10 @@ export const useEventDialogState = ({
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // Inizializzazione dello stato quando cambia l'evento
   useEffect(() => {
     if (event) {
+      console.log("Caricamento evento:", event.id, "titolo:", event.title, "tipo:", event.type);
       setTitle(event.title || "");
       setDescription(event.description || "");
       setEventType(event.type || "impegno");
@@ -30,8 +33,13 @@ export const useEventDialogState = ({
       setStartTime(event.start ? new Date(event.start) : null);
       setEndTime(event.end ? new Date(event.end) : null);
       setAttachments(event.attachments ? [...event.attachments.map(a => ({...a}))] : []);
-      setIsEditMode(event.id.startsWith("new-"));
+      
+      // Se è un nuovo evento (ID inizia con "new-"), entra subito in modalità modifica
+      const isNewEvent = event.id.startsWith("new-");
+      console.log("Modalità editing:", isNewEvent ? "attiva (nuovo evento)" : "disattivata");
+      setIsEditMode(isNewEvent);
     } else {
+      // Reset dello stato se non c'è un evento
       setTitle("");
       setDescription("");
       setEventType("impegno");
