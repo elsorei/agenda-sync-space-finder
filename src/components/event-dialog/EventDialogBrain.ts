@@ -32,14 +32,19 @@ export const useEventDialogBrain = ({
   // Load/reset form state on event change
   useEffect(() => {
     if (event) {
+      console.log("EventDialogBrain - Loading event:", event.id, event.title);
       setTitle(event.title || "");
       setDescription(event.description || "");
       setEventType(event.type || "impegno");
       setSelectedUserIds(event.userIds || []);
       setStartTime(event.start ? new Date(event.start) : null);
       setEndTime(event.end ? new Date(event.end) : null);
-      setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
+      setAttachments(event.attachments ? [...event.attachments.map(a => ({...a}))] : []);
+      
+      // Se è un nuovo evento, entra subito in modalità modifica
+      // Questo è importante per distinguere tra nuovi eventi e eventi esistenti
       setIsEditMode(event.id.startsWith("new-"));
+      console.log("EventDialogBrain - Setting edit mode:", event.id.startsWith("new-"));
     } else {
       setTitle("");
       setDescription("");
@@ -111,6 +116,8 @@ export const useEventDialogBrain = ({
       });
       return;
     }
+    
+    // Validation
     if (!startTime || !endTime) {
       toast({
         title: "Errore",
@@ -135,6 +142,8 @@ export const useEventDialogBrain = ({
       });
       return;
     }
+    
+    // Create updated event with deep copy of data
     const updatedEvent: Event = {
       ...event,
       id: event?.id || `new-${Date.now()}`,
@@ -147,6 +156,10 @@ export const useEventDialogBrain = ({
       color: event?.color || "#9b87f5",
       attachments: attachments.map((a) => ({ ...a })),
     };
+    
+    console.log("Saving event:", updatedEvent.id, updatedEvent.title);
+    console.log("Attachments:", updatedEvent.attachments?.length || 0);
+    
     onSave(updatedEvent);
     setIsEditMode(false);
   };
@@ -218,4 +231,3 @@ export const useEventDialogBrain = ({
     setIsEditMode,
   };
 };
-

@@ -1,3 +1,4 @@
+
 import { Event, User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
 import { cn } from "@/lib/utils";
@@ -60,9 +61,10 @@ const EventItem = ({
   });
 
   // Disable text selection during drag
-  const dragClass = isSelected || isDragging ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" : "";
+  const dragClass = isSelected || isDragging 
+    ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" 
+    : "";
 
-  // Touch events: long press → seleziona, doppio tap → apri dialog
   return (
     <div
       key={event.id + "-" + mainUserId}
@@ -75,8 +77,12 @@ const EventItem = ({
       style={{
         top: event.type === 'promemoria' ? 'auto' : eventStyle.top,
         height: eventStyle.height,
-        backgroundColor: event.type === 'promemoria' ? undefined : `${event.color}${isHovered || isSelected ? '40' : '20'}`,
-        borderLeft: event.type === 'promemoria' ? undefined : `3px solid ${event.color}`,
+        backgroundColor: event.type === 'promemoria' 
+          ? undefined 
+          : `${event.color}${isHovered || isSelected ? '40' : '20'}`,
+        borderLeft: event.type === 'promemoria' 
+          ? undefined 
+          : `3px solid ${event.color}`,
         zIndex: effectiveZIndex
       }}
       onClick={isMobile ? undefined : (e) => doubleTapHandler(e)}
@@ -88,8 +94,8 @@ const EventItem = ({
       onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
       onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
+      onMouseLeave={onEventMouseLeave}
       aria-label={`Apri evento: ${event.title}`}
-      // Drag handlers verranno aggiunti dal componente padre solo se selezionato
     >
       <div className="flex items-start justify-between h-full">
         <div className="overflow-hidden flex-1">

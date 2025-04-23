@@ -46,7 +46,7 @@ export const EventDialog = ({
 
   const isNewEvent = !event || event.id.startsWith("new-");
   const isEventDeletable = !!event && !!event.id && !isNewEvent && !!onDelete;
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
@@ -94,4 +94,3 @@ export const EventDialog = ({
 };
 
 export default EventDialog;
-
