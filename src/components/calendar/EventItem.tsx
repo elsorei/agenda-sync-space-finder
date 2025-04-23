@@ -22,6 +22,9 @@ interface EventItemProps {
   onEventLongPress?: (event: Event) => void;
   isSelected?: boolean;
   isDragging?: boolean;
+  onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
+  onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
 }
 
 const EventItem = ({
@@ -37,6 +40,9 @@ const EventItem = ({
   onEventLongPress,
   isSelected = false,
   isDragging = false,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: EventItemProps) => {
   const eventStyle = getEventStyle(event, hourHeight);
   const user = users.find(u => u.id === mainUserId);
@@ -50,7 +56,7 @@ const EventItem = ({
     () => {
       if (onEventLongPress) onEventLongPress(event);
     },
-    { delay: 500, cancelOnMove: true }
+    { delay: 500, cancelOnMove: false } // Cambiato a false per consentire il trascinamento
   );
 
   // Double Tap/Click per aprire (mobile e desktop)
@@ -65,22 +71,68 @@ const EventItem = ({
     ? "select-none touch-none cursor-grabbing ring-2 ring-blue-400 z-[100]" 
     : "";
 
+  // Gestione touch migliorata per il trascinamento
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation(); // Impedisce la propagazione agli elementi sottostanti
+    
     if (isMobile) {
-      doubleTapHandler(e);
-      longPressHandlers.onTouchStart(e);
+      if (isSelected && onDragStart) {
+        onDragStart(e, event);
+      } else {
+        doubleTapHandler(e);
+        longPressHandlers.onTouchStart(e);
+      }
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (isMobile && isSelected && onDragMove) {
+      onDragMove(e);
+    } else if (isMobile) {
+      longPressHandlers.onTouchMove && longPressHandlers.onTouchMove();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (isMobile && isSelected && onDragEnd) {
+      onDragEnd(e);
+    } else if (isMobile) {
+      doubleTapHandler(e);
+    }
+  };
+
+  // Gestione mouse migliorata per trascinamento desktop
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation(); // Impedisce la propagazione agli elementi sottostanti
+    
     if (!isMobile) {
-      longPressHandlers.onMouseDown(e);
+      if (isSelected && onDragStart) {
+        onDragStart(e, event);
+      } else {
+        longPressHandlers.onMouseDown(e);
+      }
     }
   };
 
-  // Centralize all mouse/touch leave handlers to avoid duplicates
+  const handleMouseMove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isMobile && isSelected && onDragMove) {
+      onDragMove(e);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isMobile && isSelected && onDragEnd) {
+      onDragEnd(e);
+    } else if (!isMobile) {
+      longPressHandlers.onMouseUp && longPressHandlers.onMouseUp();
+    }
+  };
+
+  // Centralize all mouse/touch leave handlers
   const handleMouseLeave = () => {
     if (!isMobile) {
       longPressHandlers.onMouseLeave && longPressHandlers.onMouseLeave();
@@ -106,7 +158,8 @@ const EventItem = ({
         borderLeft: event.type === 'promemoria' 
           ? undefined 
           : `3px solid ${event.color}`,
-        zIndex: effectiveZIndex
+        zIndex: effectiveZIndex,
+        touchAction: "none" // Assicura che i gesti touch vengano catturati
       }}
       onClick={isMobile ? undefined : (e) => {
         e.stopPropagation();
@@ -116,21 +169,13 @@ const EventItem = ({
         e.stopPropagation();
         doubleTapHandler(e);
       }}
-      onTouchEnd={(e) => {
-        e.stopPropagation();
-        if (isMobile) doubleTapHandler(e);
-      }}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
-      onMouseUp={(e) => {
-        e.stopPropagation();
-        if (!isMobile) longPressHandlers.onMouseUp();
-      }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
-      onTouchMove={(e) => {
-        e.stopPropagation();
-        if (isMobile) longPressHandlers.onTouchMove();
-      }}
       onMouseEnter={() => onEventMouseEnter(event.id)}
       aria-label={`Apri evento: ${event.title}`}
     >

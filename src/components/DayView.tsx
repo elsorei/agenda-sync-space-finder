@@ -1,5 +1,5 @@
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { DayViewProps, Event } from "@/types";
 import { UserAvatar } from "./UserAvatar";
 import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
@@ -9,7 +9,7 @@ import TimeSlots from "./calendar/TimeSlots";
 import RemindersList from "./calendar/RemindersList";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Nuovi helper
+// Helper per calcolare l'ora in base alla posizione verticale
 function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
   const clickedHour = 7 + y / hourHeight;
   const hour = Math.floor(clickedHour);
@@ -32,7 +32,35 @@ const DayView = ({
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [draggingEvent, setDraggingEvent] = useState<{ event: Event, yOffset: number } | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const isMobile = useIsMobile();
+
+  // Gestione dello stato del dragging attivo
+  useEffect(() => {
+    if (dragActive) {
+      // Imposta lo stile del body durante il dragging
+      document.body.style.userSelect = "none";
+      document.body.style.overflow = "hidden"; // Impedisce lo scroll durante il trascinamento
+      
+      // Aggiungi event listeners globali per terminare il dragging se necessario
+      const handleGlobalMouseUp = () => {
+        setDragActive(false);
+        setDraggingEvent(null);
+      };
+      
+      window.addEventListener("mouseup", handleGlobalMouseUp);
+      window.addEventListener("touchend", handleGlobalMouseUp);
+      
+      return () => {
+        window.removeEventListener("mouseup", handleGlobalMouseUp);
+        window.removeEventListener("touchend", handleGlobalMouseUp);
+      };
+    } else {
+      // Ripristina lo stile del body
+      document.body.style.userSelect = "";
+      document.body.style.overflow = "";
+    }
+  }, [dragActive]);
 
   // Separa i promemoria dagli altri eventi
   const reminders = events.filter(event => event.type === 'promemoria');
@@ -86,68 +114,92 @@ const DayView = ({
   const handleEventLongPress = (event: Event) => {
     setSelectedEventId(event.id);
     setHoveredEventId(event.id);
-    // Visual feedback handled in EventItem
   };
 
-  // Double tap/click su evento (apre dialog)
-  // La logica è ora in EventItem tramite useDoubleTap, ma qui serve per drag!
-  // drag handlers:
+  // Gestione inizio trascinamento evento
   const handleEventDragStart = (e: React.TouchEvent | React.MouseEvent, event: Event) => {
     e.stopPropagation();
-    if (!selectedEventId || selectedEventId !== event.id) return;
     if (!containerRef.current) return;
 
-    let clientY = e.type === "touchstart"
-      ? (e as React.TouchEvent).touches[0].clientY
-      : (e as React.MouseEvent).clientY;
+    let clientY: number;
+    if ("touches" in e) {
+      clientY = e.touches[0].clientY;
+    } else {
+      clientY = e.clientY;
+    }
 
     // Calcola y rispetto alla griglia
     const rect = containerRef.current.getBoundingClientRect();
     const yOffset = clientY - rect.top;
+
+    console.log("Drag started at position:", yOffset);
+    
     setDraggingEvent({ event, yOffset });
-    document.body.style.userSelect = "none";
+    setDragActive(true);
+    e.preventDefault(); // Previene comportamenti default del browser
   };
 
+  // Gestione trascinamento in corso
   const handleEventDrag = (e: React.TouchEvent | React.MouseEvent) => {
     e.stopPropagation();
-    if (!draggingEvent || !containerRef.current) return;
-    // Si potrebbe aggiungere overlay "shadow"...
-    // Opzionale: for future, not now
+    if (!draggingEvent || !containerRef.current || !dragActive) return;
+
+    // Ottieni la posizione attuale
+    let clientY: number;
+    if ("touches" in e) {
+      clientY = e.touches[0].clientY;
+    } else {
+      clientY = e.clientY;
+    }
+
+    console.log("Dragging at position:", clientY);
+    
+    e.preventDefault(); // Previene scroll durante il drag
   };
 
+  // Gestione fine trascinamento
   const handleEventDragEnd = (e: React.TouchEvent | React.MouseEvent) => {
     e.stopPropagation();
-    if (!draggingEvent || !containerRef.current) return;
+    if (!draggingEvent || !containerRef.current || !dragActive) return;
 
-    let clientY = e.type === "touchend"
-      ? ((e as React.TouchEvent).changedTouches
-          ? (e as React.TouchEvent).changedTouches[0].clientY
-          : (e as React.TouchEvent).touches[0].clientY)
-      : (e as React.MouseEvent).clientY;
+    // Ottieni la posizione finale
+    let clientY: number;
+    if ("changedTouches" in e) {
+      clientY = e.changedTouches[0].clientY;
+    } else if ("touches" in e) {
+      clientY = e.touches[0].clientY;
+    } else {
+      clientY = e.clientY;
+    }
 
     const rect = containerRef.current.getBoundingClientRect();
     const y = clientY - rect.top;
 
+    console.log("Drag ended at position:", y);
+
     const { newEventStart, newEventEnd } = getEventTimeByOffset(date, y, hourHeight);
 
     // Sposta evento
-    if (onAddEvent) {
-      // Togliamo l'evento dalla lista e lo rimettiamo alla nuova ora:
-      // (Qui si potrebbe chiamare una prop onEventMove se si volesse distinguere)
+    if (onEditEvent) {
       const movedEvent = { ...draggingEvent.event, start: newEventStart, end: newEventEnd };
-      // Inoltra come "edita" evento
-      if (movedEvent) {
-        // Si può anche ottimizzare con onMove prop separato
-        setTimeout(() => setSelectedEventId(null), 100);
-        onEditEvent && onEditEvent(movedEvent);
-      }
+      console.log("Moving event to new time:", formatTimeLog(newEventStart), formatTimeLog(newEventEnd));
+      
+      // Attendi un momento prima di deselezionare per un feedback visivo migliore
+      setTimeout(() => setSelectedEventId(null), 100);
+      onEditEvent(movedEvent);
     }
 
     setDraggingEvent(null);
-    document.body.style.userSelect = "";
+    setDragActive(false);
+    e.preventDefault(); // Previene click accidentali al termine del drag
   };
 
-  // --- Visualizzazione e interattività agende --- //
+  // Funzione per il debug dei timestamp
+  const formatTimeLog = (date: Date): string => {
+    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  // Double tap/click su evento (apre dialog)
   const handleEventClick = (e: React.MouseEvent, event: Event) => {
     e.stopPropagation();
     // Desktop e mobile, double-tap/click gestito in EventItem
@@ -162,6 +214,8 @@ const DayView = ({
 
   // Sfiorando lo sfondo della griglia NON crea più eventi su mobile
   const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Deseleziona l'evento se si fa click sullo sfondo
+    setSelectedEventId(null);
     // Su mobile impedisce interazioni indesiderate
     if (isMobile) {
       e.stopPropagation();
@@ -206,37 +260,24 @@ const DayView = ({
           <div className="relative">
             {regularEvents.map((event, eventIndex) =>
               event.userIds.map((userId) => (
-                <div
+                <EventItem
                   key={`${event.id}-${userId}`}
-                  style={{ touchAction: isMobile ? "none" : undefined }}
-                  onTouchStart={(e) => {
-                    e.stopPropagation();
-                    if (selectedEventId === event.id) handleEventDragStart(e, event);
-                  }}
-                  onTouchMove={(e) => {
-                    e.stopPropagation();
-                    if (draggingEvent && selectedEventId === event.id) handleEventDrag(e);
-                  }}
-                  onTouchEnd={(e) => {
-                    e.stopPropagation();
-                    if (draggingEvent && selectedEventId === event.id) handleEventDragEnd(e);
-                  }}
-                >
-                  <EventItem
-                    event={event}
-                    mainUserId={userId}
-                    users={users}
-                    zIndex={eventIndex}
-                    hoveredEventId={hoveredEventId}
-                    hourHeight={hourHeight}
-                    onEventClick={handleEventClick}
-                    onEventMouseEnter={handleEventMouseEnter}
-                    onEventMouseLeave={handleEventMouseLeave}
-                    onEventLongPress={isMobile ? handleEventLongPress : undefined}
-                    isSelected={selectedEventId === event.id}
-                    isDragging={!!draggingEvent && selectedEventId === event.id}
-                  />
-                </div>
+                  event={event}
+                  mainUserId={userId}
+                  users={users}
+                  zIndex={eventIndex}
+                  hoveredEventId={hoveredEventId}
+                  hourHeight={hourHeight}
+                  onEventClick={handleEventClick}
+                  onEventMouseEnter={handleEventMouseEnter}
+                  onEventMouseLeave={handleEventMouseLeave}
+                  onEventLongPress={handleEventLongPress}
+                  isSelected={selectedEventId === event.id}
+                  isDragging={dragActive && draggingEvent?.event.id === event.id}
+                  onDragStart={(e) => handleEventDragStart(e, event)}
+                  onDragMove={handleEventDrag}
+                  onDragEnd={handleEventDragEnd}
+                />
               ))
             )}
           </div>
