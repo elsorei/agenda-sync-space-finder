@@ -3,6 +3,7 @@ import React from "react";
 import { Event, User } from "@/types";
 import { cn } from "@/lib/utils";
 import { useEventInteractionHandlers } from "./hooks/useEventInteractionHandlers";
+import { PaperclipIcon } from "lucide-react";
 
 interface EventItemProps {
   event: Event;
@@ -60,6 +61,9 @@ const EventItem = ({
   // Find user color or fallback
   const mainUser = users.find((user) => user.id === mainUserId);
   const bgColor = event.color || (mainUser?.color ?? "#9b87f5");
+  
+  // Controlla se l'evento ha allegati
+  const hasAttachments = Array.isArray(event.attachments) && event.attachments.length > 0;
 
   // Combine passed style with dynamically generated style
   const eventStyle: React.CSSProperties = {
@@ -85,7 +89,10 @@ const EventItem = ({
       {...handlers}
     >
       <div className="flex justify-between items-center">
-        <div className="font-semibold truncate" title={event.title}>{event.title || "(Senza titolo)"}</div>
+        <div className="font-semibold truncate flex items-center" title={event.title}>
+          {event.title || "(Senza titolo)"}
+          {hasAttachments && <PaperclipIcon className="h-3 w-3 ml-1" />}
+        </div>
         <div className="text-xs ml-2 whitespace-nowrap">
           {new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
           {new Date(event.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
