@@ -51,7 +51,7 @@ const CalendarGrid = ({
   onBackgroundClick,
 }: CalendarGridProps) => {
   const isMobile = useIsMobile();
-  const timeSlots = getDayViewHalfHourIntervals();
+  const timeSlots = getDayViewHalfHourIntervals(date); // Pass the date parameter
   const gridRef = useRef<HTMLDivElement>(null);
 
   const getEventTop = (event: Event) => {
@@ -107,31 +107,36 @@ const CalendarGrid = ({
             gridTemplateRows: `repeat(17, ${hourHeight}px)`,
           }}
         >
-          {timeSlots.map((timeSlot, index) => (
-            <div
-              key={index}
-              className="relative border-t border-border"
-              style={{
-                gridRowStart: index + 1,
-                height: hourHeight,
-              }}
-            >
-              <div className="absolute left-2 top-0.5 text-xs text-muted-foreground">
-                {timeSlot}
-              </div>
-              <button
-                className="absolute inset-0 w-full h-full opacity-0 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed data-[disabled=true]:pointer-events-none"
-                onClick={(e) => onTimeSlotClick(e, timeSlot)}
-                onTouchStart={(e) => onTimeSlotLongPress(e, timeSlot)}
-                onMouseDown={(e) => {
-                  if (!isMobile) {
-                    onTimeSlotClick(e, timeSlot);
-                  }
+          {timeSlots.map((timeSlot, index) => {
+            // Format the timeSlot date to a string
+            const timeString = format(timeSlot, 'HH:mm');
+            
+            return (
+              <div
+                key={index}
+                className="relative border-t border-border"
+                style={{
+                  gridRowStart: index + 1,
+                  height: hourHeight,
                 }}
-                onContextMenu={(e) => e.preventDefault()}
-              />
-            </div>
-          ))}
+              >
+                <div className="absolute left-2 top-0.5 text-xs text-muted-foreground">
+                  {timeString}
+                </div>
+                <button
+                  className="absolute inset-0 w-full h-full opacity-0 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed data-[disabled=true]:pointer-events-none"
+                  onClick={(e) => onTimeSlotClick(e, timeString)}
+                  onTouchStart={(e) => onTimeSlotLongPress(e, timeString)}
+                  onMouseDown={(e) => {
+                    if (!isMobile) {
+                      onTimeSlotClick(e, timeString);
+                    }
+                  }}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              </div>
+            )
+          })}
           {appointments.map((event, index) =>
             event.userIds.map(userId => {
               const user = users.find((user) => user.id === userId);

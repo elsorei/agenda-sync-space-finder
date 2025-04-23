@@ -3,7 +3,7 @@ import { addMinutes, areIntervalsOverlapping, format, isSameDay, isWithinInterva
 import { Event, TimeSlot, User } from "@/types";
 
 // Genera intervalli di mezzora per la vista giornaliera
-export const getDayViewHalfHourIntervals = (date: Date): Date[] => {
+export const getDayViewHalfHourIntervals = (date = new Date()): Date[] => {
   const intervals: Date[] = [];
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
