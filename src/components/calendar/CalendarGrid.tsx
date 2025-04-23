@@ -78,6 +78,9 @@ const CalendarGrid = ({
   // Format date for display
   const formattedDate = format(date, 'yyyy-MM-dd');
 
+  // Indica se un evento di dialogo è aperto
+  const isDialogOpen = selectedEventId !== null && !dragActive;
+
   return (
     <div className="flex flex-col h-full w-full">
       <RemindersList
@@ -133,6 +136,7 @@ const CalendarGrid = ({
                     }
                   }}
                   onContextMenu={(e) => e.preventDefault()}
+                  disabled={isDialogOpen} // Disabilita i click su time slot quando il dialogo è aperto
                 />
               </div>
             )
@@ -147,9 +151,8 @@ const CalendarGrid = ({
               const isEventSelected = selectedEventId === event.id;
               const isEventDragging = dragActive && draggingEvent?.event.id === event.id;
 
-              // Nascondi completamente gli eventi non selezionati quando un altro evento è selezionato
-              // Mantieni visibili solo l'evento selezionato o tutti gli eventi quando nessuno è selezionato
-              if (selectedEventId && !isEventSelected) {
+              // Non mostrare gli altri eventi quando un evento è selezionato (e non si sta trascinando)
+              if (selectedEventId !== null && !isEventSelected && !dragActive) {
                 return null;
               }
 

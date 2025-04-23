@@ -3,11 +3,9 @@ import { useState, useRef } from "react";
 import { DayViewProps, Event } from "@/types";
 import { addMinutes } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getDayViewHalfHourIntervals } from "@/utils/timeUtils";
 import { useDayViewDrag } from "@/hooks/useDayViewDrag";
-import UserSidebar from "@/components/calendar/UserSidebar";
-import CalendarGrid from "@/components/calendar/CalendarGrid";
-import RemindersList from "@/components/calendar/RemindersList";
+import UserSidebar from "./calendar/UserSidebar";
+import CalendarGrid from "./calendar/CalendarGrid";
 
 // Helper per calcolare l'ora in base alla posizione verticale
 function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
@@ -35,22 +33,12 @@ const DayView = ({
   const { draggingEvent, setDraggingEvent, dragActive, setDragActive } = useDayViewDrag();
   const isMobile = useIsMobile();
 
-  // Filter reminders for the current day
-  const reminders = events.filter(event => {
-    return (
-      event.type === 'promemoria' &&
-      event.start.getDate() === date.getDate() &&
-      event.start.getMonth() === date.getMonth() &&
-      event.start.getFullYear() === date.getFullYear()
-    );
-  });
-
   // === Event handlers === //
   const handleTimeSlotClick = (
     e: React.MouseEvent | React.TouchEvent,
     timeString: string
   ) => {
-    if (isMobile) return;
+    if (isMobile || selectedEventId !== null) return;
     if (!onAddEvent) return;
     e.stopPropagation();
     e.preventDefault();
@@ -68,7 +56,7 @@ const DayView = ({
     e: React.MouseEvent | React.TouchEvent,
     timeString: string
   ) => {
-    if (!onAddEvent || !isMobile) return;
+    if (!onAddEvent || !isMobile || selectedEventId !== null) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -143,6 +131,7 @@ const DayView = ({
     e.stopPropagation();
     if (onEditEvent) {
       onEditEvent(event);
+      // Puliamo l'ID selezionato quando apriamo il dialog completo
       setSelectedEventId(null);
     }
   };
@@ -162,6 +151,9 @@ const DayView = ({
           users={users} 
           selectedUsers={selectedUsers}
           onUserSelect={(userId) => {
+            // Evita la selezione/deselezione di utenti quando un evento è selezionato
+            if (selectedEventId !== null) return;
+            
             setSelectedUsers(prev => 
               prev.includes(userId) 
                 ? prev.filter(id => id !== userId)
@@ -180,8 +172,17 @@ const DayView = ({
           dragActive={dragActive}
           draggingEvent={draggingEvent}
           onEventClick={handleEventClick}
-          onEventMouseEnter={setHoveredEventId}
-          onEventMouseLeave={() => setHoveredEventId(null)}
+          onEventMouseEnter={(id) => {
+            // Non evidenziare gli eventi quando uno è già selezionato
+            if (selectedEventId === null) {
+              setHoveredEventId(id);
+            }
+          }}
+          onEventMouseLeave={() => {
+            if (selectedEventId === null) {
+              setHoveredEventId(null);
+            }
+          }}
           onEventLongPress={handleEventLongPress}
           onEventDragStart={handleEventDragStart}
           onEventDrag={handleEventDrag}
@@ -191,23 +192,6 @@ const DayView = ({
           onBackgroundClick={handleBackgroundClick}
         />
       </div>
-      {reminders.length > 0 && (
-        <RemindersList 
-          reminders={reminders}
-          users={users}
-          hoveredEventId={hoveredEventId}
-          hourHeight={hourHeight}
-          onEventClick={handleEventClick}
-          onEventMouseEnter={setHoveredEventId}
-          onEventMouseLeave={() => setHoveredEventId(null)}
-          onEventLongPress={handleEventLongPress}
-          isSelected={false}
-          isDragging={false}
-          onDragStart={handleEventDragStart}
-          onDragMove={handleEventDrag}
-          onDragEnd={handleEventDragEnd}
-        />
-      )}
     </div>
   );
 };

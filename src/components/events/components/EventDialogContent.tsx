@@ -1,11 +1,13 @@
 
 import { DialogContent } from "@/components/ui/dialog";
+import { SheetContent } from "@/components/ui/sheet";
 import { EventDialogHeader } from "@/components/event-dialog/EventDialogHeader";
 import { EventDialogDetails } from "@/components/event-dialog/EventDialogDetails";
 import { EventDialogAttachments } from "@/components/event-dialog/EventDialogAttachments";
 import { EventDialogActions } from "@/components/event-dialog/EventDialogActions";
 import { Event, User, EventType } from "@/types";
 import { FileAttachment } from "@/types/files";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface EventDialogContentProps {
   state: {
@@ -46,8 +48,10 @@ export const EventDialogContent = ({
   validation,
   users
 }: EventDialogContentProps) => {
-  return (
-    <DialogContent className="max-w-3xl bg-background">
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  const content = (
+    <>
       <EventDialogHeader
         isNew={validation.isNewEvent}
         isEditMode={state.isEditMode}
@@ -91,6 +95,12 @@ export const EventDialogContent = ({
         onSave={handlers.onSave}
         onDelete={validation.isEventDeletable ? handlers.onDelete : undefined}
       />
-    </DialogContent>
+    </>
   );
+  
+  if (isMobile) {
+    return <SheetContent side="bottom" className="h-[85vh] pt-10 bg-background">{content}</SheetContent>;
+  }
+  
+  return <DialogContent className="max-w-3xl bg-background">{content}</DialogContent>;
 };
