@@ -147,6 +147,12 @@ const CalendarGrid = ({
               const isEventSelected = selectedEventId === event.id;
               const isEventDragging = dragActive && draggingEvent?.event.id === event.id;
 
+              // Nascondi completamente gli eventi non selezionati quando un altro evento è selezionato
+              // Mantieni visibili solo l'evento selezionato o tutti gli eventi quando nessuno è selezionato
+              if (selectedEventId && !isEventSelected) {
+                return null;
+              }
+
               return (
                 <EventItem
                   key={`${event.id}-${userId}`}
