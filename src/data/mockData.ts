@@ -1,4 +1,3 @@
-
 import { Event, User, EventType } from "@/types";
 import { addDays, addHours, addMinutes, startOfDay, subHours } from "date-fns";
 
@@ -60,7 +59,7 @@ export const generateMockEvents = (date: Date): Event[] => {
   const startDay = startOfDay(date);
   const events: Event[] = [];
 
-  // Alcuni eventi predefiniti
+  // Manteniamo solo un evento di esempio
   events.push(
     createEvent(
       "Riunione di team",
@@ -68,46 +67,6 @@ export const generateMockEvents = (date: Date): Event[] => {
       60,
       ["user1", "user2", "user3"],
       'appuntamento'
-    )
-  );
-
-  events.push(
-    createEvent(
-      "Pranzo con cliente",
-      addHours(startDay, 13),
-      90,
-      ["user1", "user4"],
-      'appuntamento'
-    )
-  );
-
-  events.push(
-    createEvent(
-      "Revisione progetto",
-      addHours(startDay, 15),
-      45,
-      ["user2", "user3"],
-      'impegno'
-    )
-  );
-
-  events.push(
-    createEvent(
-      "Telefonata importante",
-      addHours(addDays(startDay, 1), 11),
-      30,
-      ["user1"],
-      'promemoria'
-    )
-  );
-
-  events.push(
-    createEvent(
-      "Sprint planning",
-      subHours(addDays(startDay, 1), 1),
-      120,
-      ["user1", "user2", "user3", "user4"],
-      'impegno'
     )
   );
 
