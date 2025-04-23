@@ -151,8 +151,9 @@ const CalendarGrid = ({
               const isEventSelected = selectedEventId === event.id;
               const isEventDragging = dragActive && draggingEvent?.event.id === event.id;
 
-              // Non mostrare gli altri eventi quando un evento è selezionato (e non si sta trascinando)
-              if (selectedEventId !== null && !isEventSelected && !dragActive) {
+              // Non mostrare gli eventi quando un evento è selezionato (e non si sta trascinando)
+              // CORREZIONE: Ora nascondiamo gli eventi non selezionati quando c'è un evento selezionato
+              if (selectedEventId !== null && !isEventSelected && !isEventDragging) {
                 return null;
               }
 

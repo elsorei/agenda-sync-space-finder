@@ -58,35 +58,37 @@ export const EventDialogContent = ({
         startTime={state.startTime}
         eventType={state.eventType}
       />
-      <EventDialogDetails
-        eventType={state.eventType}
-        setEventType={handlers.setEventType}
-        users={users}
-        selectedUserIds={state.selectedUserIds}
-        onToggleUser={(userId) => {
-          const newIds = state.selectedUserIds.includes(userId)
-            ? state.selectedUserIds.filter(id => id !== userId)
-            : [...state.selectedUserIds, userId];
-          handlers.setSelectedUserIds(newIds);
-        }}
-        title={state.title}
-        setTitle={handlers.setTitle}
-        startTime={state.startTime}
-        setStartTime={handlers.setStartTime}
-        endTime={state.endTime}
-        setEndTime={handlers.setEndTime}
-        description={state.description}
-        setDescription={handlers.setDescription}
-        isReadOnly={!state.isEditMode}
-      />
-      <div className="mt-4">
-        <EventDialogAttachments
-          attachments={state.attachments}
-          onAddAttachment={handlers.handleAddFile}
-          onRemoveAttachment={handlers.handleRemoveFile}
-          onViewFile={(file) => window.open(file.url, "_blank")}
+      <div className={isMobile ? "max-h-[60vh] overflow-y-auto" : ""}>
+        <EventDialogDetails
+          eventType={state.eventType}
+          setEventType={handlers.setEventType}
+          users={users}
+          selectedUserIds={state.selectedUserIds}
+          onToggleUser={(userId) => {
+            const newIds = state.selectedUserIds.includes(userId)
+              ? state.selectedUserIds.filter(id => id !== userId)
+              : [...state.selectedUserIds, userId];
+            handlers.setSelectedUserIds(newIds);
+          }}
+          title={state.title}
+          setTitle={handlers.setTitle}
+          startTime={state.startTime}
+          setStartTime={handlers.setStartTime}
+          endTime={state.endTime}
+          setEndTime={handlers.setEndTime}
+          description={state.description}
+          setDescription={handlers.setDescription}
           isReadOnly={!state.isEditMode}
         />
+        <div className="mt-4">
+          <EventDialogAttachments
+            attachments={state.attachments}
+            onAddAttachment={handlers.handleAddFile}
+            onRemoveAttachment={handlers.handleRemoveFile}
+            onViewFile={(file) => window.open(file.url, "_blank")}
+            isReadOnly={!state.isEditMode}
+          />
+        </div>
       </div>
       <EventDialogActions
         isEditMode={state.isEditMode}
@@ -99,7 +101,11 @@ export const EventDialogContent = ({
   );
   
   if (isMobile) {
-    return <SheetContent side="bottom" className="h-[85vh] pt-10 bg-background">{content}</SheetContent>;
+    return (
+      <SheetContent side="bottom" className="h-[85vh] pt-10 bg-background overflow-hidden flex flex-col">
+        {content}
+      </SheetContent>
+    );
   }
   
   return <DialogContent className="max-w-3xl bg-background">{content}</DialogContent>;

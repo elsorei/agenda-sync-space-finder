@@ -26,17 +26,21 @@ export const useEventInteractions = ({
 }: EventInteractionsProps) => {
   const isMobile = useIsMobile();
 
+  // Configurazione per la pressione prolungata
   const longPressHandlers = useLongPress(
-    () => {
-      if (onEventLongPress) onEventLongPress(event);
+    (e) => {
+      if (onEventLongPress) {
+        onEventLongPress(event);
+      }
     },
     { delay: 500, cancelOnMove: false }
   );
 
+  // Configurazione per il doppio tap/click
   const doubleTapHandler = useDoubleTap((e) => {
     e.stopPropagation();
     e.preventDefault();
-    onEventClick(e as any, event);
+    onEventClick(e as React.MouseEvent, event);
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -46,7 +50,6 @@ export const useEventInteractions = ({
       if (isSelected && onDragStart) {
         onDragStart(e, event);
       } else {
-        doubleTapHandler(e);
         longPressHandlers.onTouchStart(e);
       }
     }
@@ -66,6 +69,7 @@ export const useEventInteractions = ({
     if (isMobile && isSelected && onDragEnd) {
       onDragEnd(e);
     } else if (isMobile) {
+      longPressHandlers.onTouchEnd && longPressHandlers.onTouchEnd();
       doubleTapHandler(e);
     }
   };
@@ -106,13 +110,12 @@ export const useEventInteractions = ({
       onMouseDown: handleMouseDown,
       onMouseMove: handleMouseMove,
       onMouseUp: handleMouseUp,
-      onClick: isMobile ? undefined : (e: React.MouseEvent) => {
+      onClick: (e: React.MouseEvent) => {
         e.stopPropagation();
-        doubleTapHandler(e);
       },
-      onDoubleClick: isMobile ? undefined : (e: React.MouseEvent) => {
+      onDoubleClick: (e: React.MouseEvent) => {
         e.stopPropagation();
-        doubleTapHandler(e);
+        onEventClick(e, event);
       },
     },
     isMobile,

@@ -2,10 +2,15 @@
 import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string): boolean {
-  // Stato inizializzato come null per evitare un rendering difforme tra server e client
+  // Stato inizializzato come false per coerenza tra client e server
   const [matches, setMatches] = useState<boolean>(false);
 
   useEffect(() => {
+    // In ambiente server, non abbiamo window
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // Crea un oggetto MediaQueryList
     const mediaQuery = window.matchMedia(query);
     

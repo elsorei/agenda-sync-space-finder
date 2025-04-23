@@ -23,14 +23,16 @@ export function useLongPress(
   onTouchMove: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const eventRef = useRef<any>(null);
   const movedRef = useRef(false);
 
   const start = useCallback(
     (event: any) => {
       movedRef.current = false;
+      eventRef.current = event;
       timerRef.current = setTimeout(() => {
         if (!movedRef.current) {
-          onLongPress(event);
+          onLongPress(eventRef.current);
         }
       }, delay);
     },
@@ -40,6 +42,7 @@ export function useLongPress(
   const clear = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = undefined;
+    eventRef.current = null;
   }, []);
 
   return {
