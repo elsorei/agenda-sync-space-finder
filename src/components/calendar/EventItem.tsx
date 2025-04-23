@@ -87,7 +87,7 @@ const EventItem = ({
       onMouseDown={!isMobile ? longPressHandlers.onMouseDown : undefined}
       onMouseUp={!isMobile ? longPressHandlers.onMouseUp : undefined}
       onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
-      onTouchMove={!isMobile ? longPressHandlers.onTouchMove : undefined}
+      onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
       onMouseLeave={onEventMouseLeave}
       aria-label={`Apri evento: ${event.title}`}
