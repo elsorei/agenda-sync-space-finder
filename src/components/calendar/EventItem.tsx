@@ -107,7 +107,7 @@ const EventItem = ({
       onMouseLeave={!isMobile ? longPressHandlers.onMouseLeave : undefined}
       onTouchMove={isMobile ? longPressHandlers.onTouchMove : undefined}
       onMouseEnter={() => onEventMouseEnter(event.id)}
-      onMouseLeave={onEventMouseLeave}
+      onMouseLeave={() => onEventMouseLeave()}
       aria-label={`Apri evento: ${event.title}`}
     >
       <div className="flex items-start justify-between h-full">
