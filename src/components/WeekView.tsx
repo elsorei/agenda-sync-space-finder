@@ -1,9 +1,8 @@
 
 import { useState } from "react";
 import { Event, User } from "@/types";
-import { addDays, startOfWeek } from "date-fns";
+import { addDays, format, startOfWeek } from "date-fns";
 import DayView from "./DayView";
-import { it } from "date-fns/locale";
 
 interface WeekViewProps {
   date: Date;
@@ -15,13 +14,18 @@ interface WeekViewProps {
 
 const WeekView = ({ date, users, events, onAddEvent, onEditEvent }: WeekViewProps) => {
   const [hourHeight] = useState(70);
-  const startDate = startOfWeek(date, { locale: it });
+  
+  // Use default locale settings (Sunday as first day of week)
+  const startDate = startOfWeek(date);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
 
   return (
     <div className="flex flex-1 overflow-hidden">
       {weekDays.map((day) => (
-        <div key={day.toISOString()} className="flex-1">
+        <div key={day.toISOString()} className="flex-1 border-r last:border-r-0">
+          <div className="text-center font-medium p-2 border-b bg-muted/20">
+            {format(day, 'EEE dd')}
+          </div>
           <DayView
             date={day}
             users={users}
