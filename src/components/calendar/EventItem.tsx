@@ -66,7 +66,7 @@ const EventItem = ({
     ...(style || {}),
     top,
     height,
-    zIndex,
+    zIndex: zIndex, // Keep original z-index (events should have lower z-index than dialogs)
     backgroundColor: bgColor,
     opacity: isDragging ? 0.7 : 1,
   };

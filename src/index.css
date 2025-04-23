@@ -112,3 +112,8 @@
 .free-slot:hover {
   background-color: rgba(129, 199, 132, 0.5);
 }
+
+/* Ensure the dialogs and sheets are always on top */
+.rdp {
+  z-index: 90 !important;
+}
