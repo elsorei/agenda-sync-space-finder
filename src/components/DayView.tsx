@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDayViewDrag } from "@/hooks/useDayViewDrag";
 import UserSidebar from "./calendar/UserSidebar";
 import CalendarGrid from "./calendar/CalendarGrid";
+import { ScrollArea } from "./ui/scroll-area";
 
 // Helper to calculate time based on vertical position
 function getEventTimeByOffset(date: Date, y: number, hourHeight: number) {
@@ -145,54 +146,56 @@ const DayView = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
-      <div className="flex">
-        <UserSidebar 
-          users={users} 
-          selectedUsers={selectedUsers}
-          onUserSelect={(userId) => {
-            // Prevent user selection/deselection when an event is selected
-            if (selectedEventId !== null) return;
-            
-            setSelectedUsers(prev => 
-              prev.includes(userId) 
-                ? prev.filter(id => id !== userId)
-                : [...prev, userId]
-            );
-          }}
-        />
-        <CalendarGrid
-          events={events}
-          users={users}
-          date={date}
-          hourHeight={hourHeight}
-          containerRef={containerRef}
-          hoveredEventId={hoveredEventId}
-          selectedEventId={selectedEventId}
-          dragActive={dragActive}
-          draggingEvent={draggingEvent}
-          onEventClick={handleEventClick}
-          onEventMouseEnter={(id) => {
-            // Don't highlight events when one is already selected
-            if (selectedEventId === null) {
-              setHoveredEventId(id);
-            }
-          }}
-          onEventMouseLeave={() => {
-            if (selectedEventId === null) {
-              setHoveredEventId(null);
-            }
-          }}
-          onEventLongPress={handleEventLongPress}
-          onEventDragStart={handleEventDragStart}
-          onEventDrag={handleEventDrag}
-          onEventDragEnd={handleEventDragEnd}
-          onTimeSlotClick={handleTimeSlotClick}
-          onTimeSlotLongPress={handleTimeSlotLongPress}
-          onBackgroundClick={handleBackgroundClick}
-        />
+    <ScrollArea className="h-[calc(100vh-180px)]">
+      <div className="flex-1 overflow-y-auto border rounded-md bg-white touch-pan-y">
+        <div className="flex">
+          <UserSidebar 
+            users={users} 
+            selectedUsers={selectedUsers}
+            onUserSelect={(userId) => {
+              // Prevent user selection/deselection when an event is selected
+              if (selectedEventId !== null) return;
+              
+              setSelectedUsers(prev => 
+                prev.includes(userId) 
+                  ? prev.filter(id => id !== userId)
+                  : [...prev, userId]
+              );
+            }}
+          />
+          <CalendarGrid
+            events={events}
+            users={users}
+            date={date}
+            hourHeight={hourHeight}
+            containerRef={containerRef}
+            hoveredEventId={hoveredEventId}
+            selectedEventId={selectedEventId}
+            dragActive={dragActive}
+            draggingEvent={draggingEvent}
+            onEventClick={handleEventClick}
+            onEventMouseEnter={(id) => {
+              // Don't highlight events when one is already selected
+              if (selectedEventId === null) {
+                setHoveredEventId(id);
+              }
+            }}
+            onEventMouseLeave={() => {
+              if (selectedEventId === null) {
+                setHoveredEventId(null);
+              }
+            }}
+            onEventLongPress={handleEventLongPress}
+            onEventDragStart={handleEventDragStart}
+            onEventDrag={handleEventDrag}
+            onEventDragEnd={handleEventDragEnd}
+            onTimeSlotClick={handleTimeSlotClick}
+            onTimeSlotLongPress={handleTimeSlotLongPress}
+            onBackgroundClick={handleBackgroundClick}
+          />
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 };
 
