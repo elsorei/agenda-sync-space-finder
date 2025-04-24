@@ -14,7 +14,7 @@ interface WeekViewProps {
 }
 
 const WeekView = ({ date, users, events, onAddEvent, onEditEvent }: WeekViewProps) => {
-  const [hourHeight] = useState(45); // Reduced from 70 to 45
+  const [hourHeight] = useState(45); // Ridotto da 70 a 45
   
   // Usa il locale italiano per iniziare la settimana da lunedì
   const startDate = startOfWeek(date, { locale: it });
