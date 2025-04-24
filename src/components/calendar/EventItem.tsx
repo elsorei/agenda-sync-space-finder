@@ -78,7 +78,7 @@ const EventItem = ({
   return (
     <div
       className={cn(
-        "absolute left-0 right-0 rounded-md px-2 py-1 text-white cursor-pointer select-none",
+        "absolute left-0 right-0 rounded-md px-2 py-1 text-white cursor-pointer select-none event-container",
         isSelected ? "ring-2 ring-offset-1 ring-blue-500" : "",
         hoveredEventId === event.id && !isSelected ? "ring-1 ring-offset-1 ring-gray-400" : "",
         isDraggable ? "cursor-move" : ""
