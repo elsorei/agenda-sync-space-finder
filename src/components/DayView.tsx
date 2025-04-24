@@ -69,7 +69,7 @@ const DayView = ({
     const y = clientY - rect.top;
     const { newEventStart, newEventEnd } = getEventTimeByOffset(date, y, hourHeight);
 
-    if (onEditEvent) {
+    if (onEditEvent && draggingEvent.event) {
       const movedEvent = { ...draggingEvent.event, start: newEventStart, end: newEventEnd };
       setTimeout(() => setSelectedEventId(null), 100);
       onEditEvent(movedEvent);
