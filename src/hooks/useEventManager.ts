@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Event, User } from "@/types";
 import { mockUsers, generateMockEvents } from "@/data/mockData";
@@ -32,7 +31,7 @@ export interface UseEventManagerResult {
 
 export function useEventManager(): UseEventManagerResult {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
+  const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('week'); // Cambiato da 'day' a 'week'
   const [users] = useState<User[]>(mockUsers);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>(mockUsers.map(user => user.id));
