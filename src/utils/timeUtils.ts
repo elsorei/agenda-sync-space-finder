@@ -2,13 +2,15 @@
 import { addMinutes, areIntervalsOverlapping, format, isSameDay, isWithinInterval, setHours, setMinutes } from "date-fns";
 import { Event, TimeSlot, User } from "@/types";
 
-// Genera intervalli di mezzora per la vista giornaliera
 export const getDayViewHalfHourIntervals = (date = new Date()): Date[] => {
   const intervals: Date[] = [];
   const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setHours(8, 0, 0, 0); // Start at 8:00
 
-  for (let i = 0; i < 48; i++) {
+  const endHour = 20; // End at 20:00
+  const totalIntervals = (endHour - 8) * 2; // 2 intervals per hour (30 minutes each)
+
+  for (let i = 0; i < totalIntervals; i++) {
     intervals.push(addMinutes(startOfDay, i * 30));
   }
 
