@@ -17,11 +17,13 @@ export const useEventDialogState = ({
   const [description, setDescription] = useState("");
   const [eventType, setEventType] = useState<EventType>("impegno");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [reserveUserIds, setReserveUserIds] = useState<string[]>([]);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [rsvpDeadline, setRsvpDeadline] = useState<Date | undefined>(undefined);
+  const [availableUntil, setAvailableUntil] = useState<Date | undefined>(undefined);
   const [inviteStatus, setInviteStatus] = useState<Record<string, InviteStatus>>({});
 
   // Inizializzazione dello stato quando cambia l'evento
@@ -32,10 +34,12 @@ export const useEventDialogState = ({
       setDescription(event.description || "");
       setEventType(event.type || "impegno");
       setSelectedUserIds(event.userIds || []);
+      setReserveUserIds(event.reserveUserIds || []);
       setStartTime(event.start ? new Date(event.start) : null);
       setEndTime(event.end ? new Date(event.end) : null);
       setAttachments(event.attachments ? [...event.attachments.map(a => ({...a}))] : []);
       setRsvpDeadline(event.rsvpDeadline ? new Date(event.rsvpDeadline) : undefined);
+      setAvailableUntil(event.availableUntil ? new Date(event.availableUntil) : undefined);
       
       // Assicuriamoci che inviteStatus abbia il tipo corretto
       const typedInviteStatus: Record<string, InviteStatus> = {};
@@ -61,14 +65,38 @@ export const useEventDialogState = ({
       setDescription("");
       setEventType("impegno");
       setSelectedUserIds([]);
+      setReserveUserIds([]);
       setStartTime(null);
       setEndTime(null);
       setAttachments([]);
       setRsvpDeadline(undefined);
+      setAvailableUntil(undefined);
       setInviteStatus({});
       setIsEditMode(true);
     }
   }, [event]);
+
+  // Funzione per gestire sia gli invitati primari che le riserve
+  const handleToggleUser = (userId: string, isReserve: boolean = false) => {
+    if (isReserve) {
+      setReserveUserIds(prev => 
+        prev.includes(userId) 
+          ? prev.filter(id => id !== userId) 
+          : [...prev, userId]
+      );
+    } else {
+      setSelectedUserIds(prev => {
+        if (prev.includes(userId)) {
+          return prev.filter(id => id !== userId);
+        } else {
+          // Se l'utente viene aggiunto come invitato principale,
+          // rimuovilo da eventuali riserve
+          setReserveUserIds(reserves => reserves.filter(id => id !== userId));
+          return [...prev, userId];
+        }
+      });
+    }
+  };
 
   return {
     title,
@@ -79,6 +107,9 @@ export const useEventDialogState = ({
     setEventType,
     selectedUserIds,
     setSelectedUserIds,
+    reserveUserIds,
+    setReserveUserIds,
+    handleToggleUser,
     startTime,
     setStartTime,
     endTime,
@@ -89,6 +120,8 @@ export const useEventDialogState = ({
     setIsEditMode,
     rsvpDeadline,
     setRsvpDeadline,
+    availableUntil,
+    setAvailableUntil,
     inviteStatus,
     setInviteStatus,
     users,

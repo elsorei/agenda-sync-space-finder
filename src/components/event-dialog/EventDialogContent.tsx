@@ -9,6 +9,8 @@ interface EventDialogContentProps {
   users: any[];
   selectedUserIds: string[];
   onToggleUser: (userId: string) => void;
+  reserveUserIds: string[];
+  onToggleReserveUser: (userId: string, isReserve: boolean) => void;
   title: string;
   setTitle: (title: string) => void;
   startTime: Date | null;
@@ -20,6 +22,8 @@ interface EventDialogContentProps {
   isReadOnly: boolean;
   rsvpDeadline?: Date;
   setRsvpDeadline?: (deadline: Date | undefined) => void;
+  availableUntil?: Date;
+  setAvailableUntil?: (until: Date | undefined) => void;
   inviteStatus?: Record<string, InviteStatus>;
   attachments?: any[];
   onAddAttachment?: (file: any) => void;
@@ -33,6 +37,8 @@ export const EventDialogContent = ({
   users,
   selectedUserIds,
   onToggleUser,
+  reserveUserIds = [],
+  onToggleReserveUser,
   title,
   setTitle,
   startTime,
@@ -44,6 +50,8 @@ export const EventDialogContent = ({
   isReadOnly,
   rsvpDeadline,
   setRsvpDeadline,
+  availableUntil,
+  setAvailableUntil,
   inviteStatus,
   attachments = [],
   onAddAttachment,
@@ -66,9 +74,13 @@ export const EventDialogContent = ({
         users={users}
         selectedUserIds={selectedUserIds}
         onToggleUser={onToggleUser}
+        reserveUserIds={reserveUserIds}
+        onToggleReserveUser={onToggleReserveUser}
         isReadOnly={isReadOnly}
         rsvpDeadline={rsvpDeadline}
         setRsvpDeadline={setRsvpDeadline}
+        availableUntil={availableUntil}
+        setAvailableUntil={setAvailableUntil}
         inviteStatus={inviteStatus}
       />
       

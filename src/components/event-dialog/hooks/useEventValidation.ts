@@ -7,6 +7,7 @@ interface UseEventValidationProps {
   endTime: Date | null;
   selectedUserIds: string[];
   rsvpDeadline?: Date;
+  availableUntil?: Date;
 }
 
 export const useEventValidation = ({
@@ -14,7 +15,8 @@ export const useEventValidation = ({
   startTime,
   endTime,
   selectedUserIds,
-  rsvpDeadline
+  rsvpDeadline,
+  availableUntil
 }: UseEventValidationProps) => {
   const validateEvent = () => {
     // Validare il titolo
@@ -62,6 +64,16 @@ export const useEventValidation = ({
       toast({
         title: "Errore di validazione",
         description: "La scadenza per le risposte deve essere prima dell'inizio dell'evento",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Validare la scadenza della disponibilità se presente
+    if (availableUntil && startTime && availableUntil >= startTime) {
+      toast({
+        title: "Errore di validazione",
+        description: "La disponibilità deve scadere prima dell'inizio dell'evento",
         variant: "destructive"
       });
       return false;

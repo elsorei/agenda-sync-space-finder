@@ -9,6 +9,8 @@ import { EventTypeSelection } from "./EventTypeSelection";
 import { TimePicker } from "@/components/TimePicker";
 import { RsvpDeadlineField } from "./RsvpDeadlineField";
 import { UserRsvpStatus } from "./UserRsvpStatus";
+import { AvailableUntilField } from "./AvailableUntilField";
+import { EventReservesSelection } from "./EventReservesSelection";
 
 interface EventDialogDetailsProps {
   title: string;
@@ -24,9 +26,13 @@ interface EventDialogDetailsProps {
   users: User[];
   selectedUserIds: string[];
   onToggleUser: (userId: string) => void;
+  reserveUserIds: string[];
+  onToggleReserveUser: (userId: string, isReserve: boolean) => void;
   isReadOnly: boolean;
   rsvpDeadline?: Date;
   setRsvpDeadline?: (deadline: Date | undefined) => void;
+  availableUntil?: Date;
+  setAvailableUntil?: (deadline: Date | undefined) => void;
   inviteStatus?: Record<string, InviteStatus>;
 }
 
@@ -44,9 +50,13 @@ export const EventDialogDetails = ({
   users,
   selectedUserIds,
   onToggleUser,
+  reserveUserIds,
+  onToggleReserveUser,
   isReadOnly,
   rsvpDeadline,
   setRsvpDeadline,
+  availableUntil,
+  setAvailableUntil,
   inviteStatus
 }: EventDialogDetailsProps) => {
   return (
@@ -94,7 +104,26 @@ export const EventDialogDetails = ({
         isReadOnly={isReadOnly}
       />
 
-      {/* Nuovo campo per la scadenza RSVP */}
+      {/* Nuovo campo per la disponibilità */}
+      {setAvailableUntil && (
+        <AvailableUntilField
+          availableUntil={availableUntil}
+          onAvailableUntilChange={setAvailableUntil}
+          eventDate={startTime}
+          isReadOnly={isReadOnly}
+        />
+      )}
+
+      {/* Sezione per le riserve */}
+      <EventReservesSelection
+        users={users}
+        selectedUserIds={selectedUserIds}
+        reserveUserIds={reserveUserIds}
+        onToggleUser={onToggleReserveUser}
+        isReadOnly={isReadOnly}
+      />
+
+      {/* Campo per la scadenza RSVP */}
       {setRsvpDeadline && (
         <RsvpDeadlineField
           rsvpDeadline={rsvpDeadline}
@@ -105,11 +134,11 @@ export const EventDialogDetails = ({
       )}
 
       {/* Mostra lo stato delle risposte se non siamo in modalità di creazione */}
-      {!isReadOnly && inviteStatus && (
+      {!isReadOnly && inviteStatus && Object.keys(inviteStatus).length > 0 && (
         <UserRsvpStatus
           users={users}
           selectedUserIds={selectedUserIds}
-          inviteStatus={inviteStatus as Record<string, InviteStatus>}
+          inviteStatus={inviteStatus}
           isReadOnly={isReadOnly}
         />
       )}

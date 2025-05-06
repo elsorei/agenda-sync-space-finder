@@ -1,118 +1,108 @@
 
-import React from "react";
-import { Event, User } from "@/types";
-import { cn } from "@/lib/utils";
-import { useEventInteractionHandlers } from "./hooks/useEventInteractionHandlers";
-import { PaperclipIcon, ClockIcon } from "lucide-react";
-import { differenceInMinutes, isBefore } from "date-fns";
+import React from 'react';
+import { EventItemContent } from './EventItemContent';
+import { EventContextMenu } from './EventContextMenu';
+import { Event, User } from '@/types';
+import { cn } from '@/lib/utils';
+import { useEventInteractions } from '@/hooks/useEventInteractions';
+import { Clock } from 'lucide-react';
 
 interface EventItemProps {
   event: Event;
-  mainUserId: string;
   users: User[];
-  zIndex: number;
-  top?: string;
-  height?: string;
-  style?: React.CSSProperties;
-  hoveredEventId: string | null;
-  hourHeight: number;
-  onEventClick: (e: React.MouseEvent, event: Event) => void;
-  onEventMouseEnter: (eventId: string) => void;
-  onEventMouseLeave: () => void;
-  onEventLongPress: (event: Event) => void;
-  isSelected: boolean;
-  isDragging: boolean;
-  isDraggable: boolean;
-  onDragStart: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
-  onDragMove: (e: React.TouchEvent | React.MouseEvent) => void;
-  onDragEnd: (e: React.TouchEvent | React.MouseEvent) => void;
+  onClick: (event: Event) => void;
+  onDoubleClick?: (event: Event) => void;
+  onContextMenu?: (event: Event) => void;
+  isSelected?: boolean;
+  showTime?: boolean;
+  displayMode?: 'block' | 'line' | 'compact';
+  className?: string;
 }
 
-const EventItem = ({
-  event,
-  mainUserId,
-  users,
-  zIndex,
-  top,
-  height,
-  style,
-  hoveredEventId,
-  hourHeight,
-  onEventClick,
-  onEventMouseEnter,
-  onEventMouseLeave,
-  onEventLongPress,
-  isSelected,
-  isDragging,
-  isDraggable,
-  onDragStart,
-  onDragMove,
-  onDragEnd,
-}: EventItemProps) => {
-  const { handlers } = useEventInteractionHandlers({
+export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({ 
+  event, 
+  users, 
+  onClick, 
+  onDoubleClick, 
+  onContextMenu,
+  isSelected = false,
+  showTime = true,
+  displayMode = 'block',
+  className = '',
+}, ref) => {
+  const {
+    handleClick,
+    handleDoubleClick,
+    handleContextMenu,
+    contextMenuOpen,
+    contextMenuPosition,
+    closeContextMenu
+  } = useEventInteractions({
     event,
-    isSelected,
-    onEventLongPress,
-    onEventClick,
-    onDragStart,
-    onDragMove,
-    onDragEnd,
+    onClick,
+    onDoubleClick,
+    onContextMenu
   });
 
-  // Find user color or fallback
-  const mainUser = users.find((user) => user.id === mainUserId);
-  const bgColor = event.color || (mainUser?.color ?? "#9b87f5");
+  // Ottieni gli utenti associati all'evento
+  const eventUsers = users.filter(user => event.userIds.includes(user.id));
   
-  // Controlla se l'evento ha allegati
-  const hasAttachments = Array.isArray(event.attachments) && event.attachments.length > 0;
+  // Determina se ci sono invitati che non hanno confermato
+  const hasPendingInvites = event.inviteStatus && 
+    Object.values(event.inviteStatus).some(status => status === 'pending');
   
-  // Controlla se c'è una scadenza per le risposte
-  const hasRsvpDeadline = !!event.rsvpDeadline;
-  const now = new Date();
-  const isDeadlineApproaching = hasRsvpDeadline && 
-    isBefore(now, new Date(event.rsvpDeadline)) && 
-    differenceInMinutes(new Date(event.rsvpDeadline), now) < 1440; // Meno di 24 ore
-  const isDeadlinePassed = hasRsvpDeadline && 
-    isBefore(new Date(event.rsvpDeadline), now);
+  // Determina se l'evento ha una scadenza per le risposte
+  const hasDeadline = !!event.rsvpDeadline;
+  
+  // Determina se l'evento ha una data di disponibilità
+  const hasAvailableUntil = !!event.availableUntil;
 
-  // Combine passed style with dynamically generated style
-  const eventStyle: React.CSSProperties = {
-    ...(style || {}),
-    top,
-    height,
-    zIndex: zIndex, // Keep original z-index (events should have lower z-index than dialogs)
-    backgroundColor: bgColor,
-    opacity: isDragging ? 0.7 : 1,
-    // Se la scadenza è passata e non tutti hanno risposto, mostra un bordo tratteggiato
-    border: isDeadlinePassed ? '2px dashed #f87171' : undefined,
-  };
+  // Classe per il bordo tratteggiato se c'è una scadenza
+  const borderClass = hasDeadline || hasAvailableUntil ? 'border-dashed' : 'border-solid';
 
   return (
     <div
+      ref={ref}
       className={cn(
-        "absolute left-0 right-0 rounded-md px-2 py-1 text-white cursor-pointer select-none event-container",
-        isSelected ? "ring-2 ring-offset-1 ring-blue-500" : "",
-        hoveredEventId === event.id && !isSelected ? "ring-1 ring-offset-1 ring-gray-400" : "",
-        isDraggable ? "cursor-move" : ""
+        'group relative rounded-md border p-2 text-sm overflow-hidden transition-shadow cursor-pointer',
+        borderClass,
+        isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md',
+        `bg-${event.color || 'primary'}/20 border-${event.color || 'primary'}/30`,
+        className
       )}
-      style={eventStyle}
-      onMouseEnter={() => onEventMouseEnter(event.id)}
-      onMouseLeave={onEventMouseLeave}
-      {...handlers}
+      style={{ 
+        backgroundColor: `${event.color}20`,
+        borderColor: `${event.color}30`
+      }}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
     >
-      <div className="flex justify-between items-center">
-        <div className="font-semibold truncate flex items-center" title={event.title}>
-          {event.title || "(Senza titolo)"}
-          {hasAttachments && <PaperclipIcon className="h-3 w-3 ml-1" />}
-          {isDeadlineApproaching && <ClockIcon className="h-3 w-3 ml-1 animate-pulse" title="Scadenza per rispondere in arrivo" />}
+      {(hasDeadline || hasAvailableUntil) && (
+        <div className="absolute top-1 right-1">
+          <Clock className="h-3 w-3 text-muted-foreground" aria-label="Scadenza impostata" />
         </div>
-        <div className="text-xs ml-2 whitespace-nowrap">
-          {new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
-          {new Date(event.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </div>
-      </div>
+      )}
+      
+      <EventItemContent 
+        event={event} 
+        users={eventUsers} 
+        showTime={showTime}
+        displayMode={displayMode}
+      />
+      
+      {contextMenuOpen && onContextMenu && (
+        <EventContextMenu
+          event={event}
+          position={contextMenuPosition}
+          onClose={closeContextMenu}
+          onSelect={onContextMenu}
+        />
+      )}
     </div>
   );
-};
+});
+
+EventItem.displayName = 'EventItem';
 
 export default EventItem;

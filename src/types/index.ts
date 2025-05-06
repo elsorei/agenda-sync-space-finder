@@ -11,13 +11,15 @@ export interface Event {
   description?: string;
   start: Date;
   end: Date;
-  userIds: string[];
+  userIds: string[]; // Invitati primari
+  reserveUserIds?: string[]; // Invitati di riserva
   color: string;
   type: EventType;
   attachments: FileAttachment[];
-  // Nuovi campi per la gestione delle adesioni
-  rsvpDeadline?: Date;
+  // Campi per la gestione delle adesioni
+  rsvpDeadline?: Date; // Data limite per rispondere all'invito
   inviteStatus?: Record<string, InviteStatus>; // Mappa userId -> stato invito
+  availableUntil?: Date; // Data di scadenza della disponibilità
 }
 
 export interface User {

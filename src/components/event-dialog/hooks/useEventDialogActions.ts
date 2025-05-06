@@ -16,6 +16,8 @@ interface UseEventDialogActionsProps {
     setEventType: (et: EventType) => void;
     selectedUserIds: string[];
     setSelectedUserIds: (f: ((prev: string[]) => string[]) | string[]) => void;
+    reserveUserIds: string[];
+    setReserveUserIds: (f: ((prev: string[]) => string[]) | string[]) => void;
     startTime: Date | null;
     setStartTime: (date: Date | null) => void;
     endTime: Date | null;
@@ -26,6 +28,8 @@ interface UseEventDialogActionsProps {
     setIsEditMode: (val: boolean) => void;
     rsvpDeadline: Date | undefined;
     setRsvpDeadline: (deadline: Date | undefined) => void;
+    availableUntil: Date | undefined;
+    setAvailableUntil: (until: Date | undefined) => void;
     inviteStatus: Record<string, InviteStatus>;
     setInviteStatus: (f: ((prev: Record<string, InviteStatus>) => Record<string, InviteStatus>) | Record<string, InviteStatus>) => void;
     users: User[];
@@ -59,7 +63,8 @@ export const useEventDialogActions = ({
     startTime: state.startTime,
     endTime: state.endTime,
     selectedUserIds: state.selectedUserIds,
-    rsvpDeadline: state.rsvpDeadline
+    rsvpDeadline: state.rsvpDeadline,
+    availableUntil: state.availableUntil
   });
 
   const handleSave = () => {
@@ -82,6 +87,13 @@ export const useEventDialogActions = ({
       }
     });
 
+    // Se ci sono riserve, inizializziamo anche il loro stato
+    state.reserveUserIds.forEach(userId => {
+      if (!updatedInviteStatus[userId]) {
+        updatedInviteStatus[userId] = 'pending';
+      }
+    });
+
     const updatedEvent: Event = {
       ...event,
       id: event?.id || `new-${Date.now()}`,
@@ -89,11 +101,13 @@ export const useEventDialogActions = ({
       description: state.description,
       type: state.eventType,
       userIds: [...state.selectedUserIds],
+      reserveUserIds: [...state.reserveUserIds],
       start: state.startTime ? new Date(state.startTime.getTime()) : new Date(),
       end: state.endTime ? new Date(state.endTime.getTime()) : new Date(),
       color: event?.color || "#9b87f5",
       attachments: state.attachments.map((a) => ({ ...a })),
       rsvpDeadline: state.rsvpDeadline,
+      availableUntil: state.availableUntil,
       inviteStatus: updatedInviteStatus
     };
 
@@ -108,10 +122,12 @@ export const useEventDialogActions = ({
         state.setDescription(event.description || "");
         state.setEventType(event.type || "impegno");
         state.setSelectedUserIds(event.userIds || []);
+        state.setReserveUserIds(event.reserveUserIds || []);
         state.setStartTime(event.start ? new Date(event.start) : null);
         state.setEndTime(event.end ? new Date(event.end) : null);
         state.setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
         state.setRsvpDeadline(event.rsvpDeadline);
+        state.setAvailableUntil(event.availableUntil);
         state.setInviteStatus(event.inviteStatus || {});
         setIsEditMode(false);
       } else {
@@ -119,10 +135,12 @@ export const useEventDialogActions = ({
         state.setDescription("");
         state.setEventType("impegno");
         state.setSelectedUserIds([]);
+        state.setReserveUserIds([]);
         state.setStartTime(null);
         state.setEndTime(null);
         state.setAttachments([]);
         state.setRsvpDeadline(undefined);
+        state.setAvailableUntil(undefined);
         state.setInviteStatus({});
         setIsEditMode(true);
       }
