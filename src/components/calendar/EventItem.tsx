@@ -10,7 +10,7 @@ import { Clock } from 'lucide-react';
 interface EventItemProps {
   event: Event;
   users: User[];
-  mainUserId?: string; // Added mainUserId property
+  mainUserId?: string; // Aggiunto mainUserId come opzionale
   onClick: (event: Event) => void;
   onDoubleClick?: (event: Event) => void;
   onContextMenu?: (event: Event) => void;
@@ -18,20 +18,21 @@ interface EventItemProps {
   showTime?: boolean;
   displayMode?: 'block' | 'line' | 'compact';
   className?: string;
-  style?: React.CSSProperties; // Added style property
-  top?: string; // Added top property
-  height?: string; // Added height property
-  hourHeight?: number; // Added hourHeight property
-  hoveredEventId?: string | null; // Added hoveredEventId property
+  style?: React.CSSProperties;
+  top?: string;
+  height?: string;
+  hourHeight?: number;
+  hoveredEventId?: string | null;
   onEventClick?: (e: React.MouseEvent, event: Event) => void;
   onEventMouseEnter?: (eventId: string) => void;
   onEventMouseLeave?: () => void;
   onEventLongPress?: (event: Event) => void;
-  isDragging?: boolean; // Added isDragging property
-  isDraggable?: boolean; // Added isDraggable property
+  isDragging?: boolean;
+  isDraggable?: boolean;
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
+  zIndex?: number; // Aggiunto zIndex
 }
 
 export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({ 
@@ -58,7 +59,8 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
   isDraggable,
   onDragStart,
   onDragMove,
-  onDragEnd
+  onDragEnd,
+  zIndex
 }, ref) => {
   const {
     handlers,
@@ -71,7 +73,12 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
     isSelected,
     onClick,
     onDoubleClick,
-    onContextMenu
+    onContextMenu,
+    onEventLongPress,
+    onEventClick,
+    onDragStart,
+    onDragMove,
+    onDragEnd
   });
 
   // Ottieni gli utenti associati all'evento
@@ -91,12 +98,13 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
   const borderClass = hasDeadline || hasAvailableUntil ? 'border-dashed' : 'border-solid';
 
   // Combine external style with base styles
-  const combinedStyle = {
+  const combinedStyle: React.CSSProperties = {
     ...(style || {}),
     top,
     height,
     position: top ? 'absolute' : 'relative',
-    width: top ? '100%' : undefined
+    width: top ? '100%' : undefined,
+    zIndex: zIndex
   };
 
   return (
