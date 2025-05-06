@@ -1,5 +1,5 @@
 
-import { EventType, User } from "@/types";
+import { EventType, User, InviteStatus } from "@/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ interface EventDialogDetailsProps {
   isReadOnly: boolean;
   rsvpDeadline?: Date;
   setRsvpDeadline?: (deadline: Date | undefined) => void;
-  inviteStatus?: Record<string, string>;
+  inviteStatus?: Record<string, InviteStatus>;
 }
 
 export const EventDialogDetails = ({
@@ -73,14 +73,14 @@ export const EventDialogDetails = ({
         <Label>Data e ora</Label>
         <div className="flex flex-col md:flex-row md:items-center gap-2">
           <TimePicker 
-            value={startTime} 
-            onChange={setStartTime} 
+            date={startTime} 
+            setDate={setStartTime} 
             disabled={isReadOnly} 
             label="Inizio" 
           />
           <TimePicker 
-            value={endTime} 
-            onChange={setEndTime} 
+            date={endTime} 
+            setDate={setEndTime} 
             disabled={isReadOnly} 
             label="Fine" 
           />
@@ -109,7 +109,7 @@ export const EventDialogDetails = ({
         <UserRsvpStatus
           users={users}
           selectedUserIds={selectedUserIds}
-          inviteStatus={inviteStatus}
+          inviteStatus={inviteStatus as Record<string, InviteStatus>}
           isReadOnly={isReadOnly}
         />
       )}

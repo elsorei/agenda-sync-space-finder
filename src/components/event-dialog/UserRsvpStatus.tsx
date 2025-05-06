@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface UserRsvpStatusProps {
   users: User[];
   selectedUserIds: string[];
-  inviteStatus?: Record<string, InviteStatus>;
+  inviteStatus: Record<string, InviteStatus>;
   isReadOnly: boolean;
 }
 

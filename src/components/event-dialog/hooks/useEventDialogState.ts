@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Event, User, EventType } from "@/types";
+import { Event, User, EventType, InviteStatus } from "@/types";
 import { FileAttachment } from "@/types/files";
 
 interface UseEventDialogStateProps {
@@ -22,7 +22,7 @@ export const useEventDialogState = ({
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [rsvpDeadline, setRsvpDeadline] = useState<Date | undefined>(undefined);
-  const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
+  const [inviteStatus, setInviteStatus] = useState<Record<string, InviteStatus>>({});
 
   // Inizializzazione dello stato quando cambia l'evento
   useEffect(() => {
@@ -36,7 +36,20 @@ export const useEventDialogState = ({
       setEndTime(event.end ? new Date(event.end) : null);
       setAttachments(event.attachments ? [...event.attachments.map(a => ({...a}))] : []);
       setRsvpDeadline(event.rsvpDeadline ? new Date(event.rsvpDeadline) : undefined);
-      setInviteStatus(event.inviteStatus || {});
+      
+      // Assicuriamoci che inviteStatus abbia il tipo corretto
+      const typedInviteStatus: Record<string, InviteStatus> = {};
+      if (event.inviteStatus) {
+        Object.keys(event.inviteStatus).forEach(key => {
+          const status = event.inviteStatus?.[key];
+          if (status === 'accepted' || status === 'declined' || status === 'pending') {
+            typedInviteStatus[key] = status;
+          } else {
+            typedInviteStatus[key] = 'pending';
+          }
+        });
+      }
+      setInviteStatus(typedInviteStatus);
       
       // Se è un nuovo evento (ID inizia con "new-"), entra subito in modalità modifica
       const isNewEvent = event.id.startsWith("new-");

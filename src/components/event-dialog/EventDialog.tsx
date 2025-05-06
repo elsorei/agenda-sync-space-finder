@@ -2,9 +2,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EventDialogProps } from "./types";
 import { EventDialogHeader } from "./EventDialogHeader";
-import { EventDialogGuests } from "./EventDialogGuests";
 import { EventDialogContent } from "./EventDialogContent";
-import { EventDialogAttachments } from "./EventDialogAttachments";
 import { EventDialogActions } from "./EventDialogActions";
 import { useEventDialogBrain } from "./EventDialogBrain";
 
@@ -87,16 +85,11 @@ export const EventDialog = ({
           rsvpDeadline={rsvpDeadline}
           setRsvpDeadline={setRsvpDeadline}
           inviteStatus={inviteStatus}
+          attachments={attachments}
+          onAddAttachment={addAttachment}
+          onRemoveAttachment={removeAttachment}
+          onViewAttachment={viewAttachment}
         />
-        <div className="mt-4">
-          <EventDialogAttachments
-            attachments={attachments}
-            onAddAttachment={addAttachment}
-            onRemoveAttachment={removeAttachment}
-            onViewFile={viewAttachment}
-            isReadOnly={!isEditMode && !!event}
-          />
-        </div>
         <EventDialogActions
           isEditMode={isEditMode}
           isEventDeletable={isEventDeletable}

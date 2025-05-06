@@ -14,13 +14,17 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface TimePickerProps {
-  date: Date
-  setDate: (date: Date) => void
+  date: Date | null;
+  setDate: (date: Date | null) => void;
+  disabled?: boolean;
+  label?: string;
 }
 
-export function TimePickerDemo({
+export function TimePicker({
   date,
   setDate,
+  disabled = false,
+  label = ""
 }: TimePickerProps) {
   const minuteOptions = Array.from({ length: 4 }, (_, i) => i * 15)
   const hourOptions = Array.from({ length: 24 }, (_, i) => i)
@@ -30,15 +34,15 @@ export function TimePickerDemo({
 
   // Se date non è valido, creiamo una nuova istanza con l'ora corrente
   React.useEffect(() => {
-    if (!isValidDate) {
+    if (!isValidDate && setDate && !disabled) {
       console.warn("TimePicker received an invalid date, using current time instead");
       setDate(new Date());
     }
-  }, [date, isValidDate, setDate]);
+  }, [date, isValidDate, setDate, disabled]);
 
   const handleHourChange = (hour: string) => {
     // Proteggiamo la funzione da date non valide
-    if (!isValidDate) return;
+    if (!isValidDate || disabled) return;
     
     const newDate = new Date(date)
     newDate.setHours(parseInt(hour))
@@ -47,7 +51,7 @@ export function TimePickerDemo({
 
   const handleMinuteChange = (minute: string) => {
     // Proteggiamo la funzione da date non valide
-    if (!isValidDate) return;
+    if (!isValidDate || disabled) return;
     
     const newDate = new Date(date)
     newDate.setMinutes(parseInt(minute))
@@ -65,6 +69,7 @@ export function TimePickerDemo({
         disabled
       >
         <Clock className="mr-2 h-4 w-4" />
+        {label && <span className="mr-1">{label}:</span>}
         Orario non valido
       </Button>
     );
@@ -78,8 +83,10 @@ export function TimePickerDemo({
           className={cn(
             "w-full justify-start text-left font-normal",
           )}
+          disabled={disabled}
         >
           <Clock className="mr-2 h-4 w-4" />
+          {label && <span className="mr-1">{label}:</span>}
           {format(date, "HH:mm", { locale: it })}
         </Button>
       </PopoverTrigger>

@@ -8,12 +8,18 @@ interface EventTypeSelectionProps {
   value: EventType;
   onChange: (value: EventType) => void;
   disabled?: boolean;
+  isReadOnly?: boolean;
 }
 
-export const EventTypeSelection = ({ value, onChange, disabled = false }: EventTypeSelectionProps) => {
-  // Funzione per gestire il cambio di valore considerando la modalità disabled
+export const EventTypeSelection = ({ 
+  value, 
+  onChange, 
+  disabled = false, 
+  isReadOnly = false 
+}: EventTypeSelectionProps) => {
+  // Funzione per gestire il cambio di valore considerando la modalità disabled/readonly
   const handleChange = (newValue: EventType) => {
-    if (!disabled) {
+    if (!disabled && !isReadOnly) {
       onChange(newValue);
     } else {
       // Se siamo in modalità disabled/readonly, mostriamo un toast informativo
@@ -34,16 +40,16 @@ export const EventTypeSelection = ({ value, onChange, disabled = false }: EventT
         className="col-span-3 flex gap-4"
       >
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="impegno" id="impegno" disabled={disabled} />
-          <Label htmlFor="impegno" className={disabled ? "opacity-70" : ""}>Impegno</Label>
+          <RadioGroupItem value="impegno" id="impegno" disabled={disabled || isReadOnly} />
+          <Label htmlFor="impegno" className={(disabled || isReadOnly) ? "opacity-70" : ""}>Impegno</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="appuntamento" id="appuntamento" disabled={disabled} />
-          <Label htmlFor="appuntamento" className={disabled ? "opacity-70" : ""}>Appuntamento</Label>
+          <RadioGroupItem value="appuntamento" id="appuntamento" disabled={disabled || isReadOnly} />
+          <Label htmlFor="appuntamento" className={(disabled || isReadOnly) ? "opacity-70" : ""}>Appuntamento</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="promemoria" id="promemoria" disabled={disabled} />
-          <Label htmlFor="promemoria" className={disabled ? "opacity-70" : ""}>Promemoria</Label>
+          <RadioGroupItem value="promemoria" id="promemoria" disabled={disabled || isReadOnly} />
+          <Label htmlFor="promemoria" className={(disabled || isReadOnly) ? "opacity-70" : ""}>Promemoria</Label>
         </div>
       </RadioGroup>
     </div>
