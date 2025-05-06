@@ -18,6 +18,20 @@ interface EventItemProps {
   showTime?: boolean;
   displayMode?: 'block' | 'line' | 'compact';
   className?: string;
+  style?: React.CSSProperties; // Added style property
+  top?: string; // Added top property
+  height?: string; // Added height property
+  hourHeight?: number; // Added hourHeight property
+  hoveredEventId?: string | null; // Added hoveredEventId property
+  onEventClick?: (e: React.MouseEvent, event: Event) => void;
+  onEventMouseEnter?: (eventId: string) => void;
+  onEventMouseLeave?: () => void;
+  onEventLongPress?: (event: Event) => void;
+  isDragging?: boolean; // Added isDragging property
+  isDraggable?: boolean; // Added isDraggable property
+  onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
+  onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
+  onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
 }
 
 export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({ 
@@ -31,6 +45,20 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
   showTime = true,
   displayMode = 'block',
   className = '',
+  style,
+  top,
+  height,
+  hourHeight,
+  hoveredEventId,
+  onEventClick,
+  onEventMouseEnter,
+  onEventMouseLeave,
+  onEventLongPress,
+  isDragging,
+  isDraggable,
+  onDragStart,
+  onDragMove,
+  onDragEnd
 }, ref) => {
   const {
     handlers,
@@ -62,6 +90,15 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
   // Classe per il bordo tratteggiato se c'è una scadenza
   const borderClass = hasDeadline || hasAvailableUntil ? 'border-dashed' : 'border-solid';
 
+  // Combine external style with base styles
+  const combinedStyle = {
+    ...(style || {}),
+    top,
+    height,
+    position: top ? 'absolute' : 'relative',
+    width: top ? '100%' : undefined
+  };
+
   return (
     <div
       ref={ref}
@@ -74,7 +111,8 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
       )}
       style={{ 
         backgroundColor: `${event.color}20`,
-        borderColor: `${event.color}30`
+        borderColor: `${event.color}30`,
+        ...combinedStyle
       }}
       {...handlers}
     >
@@ -87,7 +125,7 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
       <EventItemContent 
         event={event} 
         user={eventUsers[0]}
-        height={70}
+        height={hourHeight || 70}
       />
       
       {contextMenuOpen && onContextMenu && (
