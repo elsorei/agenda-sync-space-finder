@@ -20,6 +20,7 @@ interface EventDialogContentProps {
     attachments: FileAttachment[];
     showFileUpload: boolean;
     isEditMode: boolean;
+    reserveUserIds: string[];
   };
   handlers: {
     setTitle: (t: string) => void;
@@ -31,6 +32,7 @@ interface EventDialogContentProps {
     setShowFileUpload: (s: boolean) => void;
     handleAddFile: (f: FileAttachment) => void;
     handleRemoveFile: (id: string) => void;
+    onToggleReserveUser: (userId: string, isReserve: boolean) => void;
     onSave: () => void;
     onCancel: () => void;
     onDelete: () => void;
@@ -70,6 +72,8 @@ export const EventDialogContent = ({
               : [...state.selectedUserIds, userId];
             handlers.setSelectedUserIds(newIds);
           }}
+          reserveUserIds={state.reserveUserIds || []}
+          onToggleReserveUser={handlers.onToggleReserveUser}
           title={state.title}
           setTitle={handlers.setTitle}
           startTime={state.startTime}

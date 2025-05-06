@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { EventItemContent } from './EventItemContent';
-import { EventContextMenu } from './EventContextMenu';
+import EventItemContent from './EventItemContent';
+import EventContextMenu from './EventContextMenu';
 import { Event, User } from '@/types';
 import { cn } from '@/lib/utils';
 import { useEventInteractions } from '@/hooks/useEventInteractions';
@@ -31,9 +31,8 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
   className = '',
 }, ref) => {
   const {
-    handleClick,
-    handleDoubleClick,
-    handleContextMenu,
+    handlers,
+    isMobile,
     contextMenuOpen,
     contextMenuPosition,
     closeContextMenu
@@ -74,9 +73,7 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
         backgroundColor: `${event.color}20`,
         borderColor: `${event.color}30`
       }}
-      onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
-      onContextMenu={handleContextMenu}
+      {...handlers}
     >
       {(hasDeadline || hasAvailableUntil) && (
         <div className="absolute top-1 right-1">
@@ -86,18 +83,15 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
       
       <EventItemContent 
         event={event} 
-        users={eventUsers} 
-        showTime={showTime}
-        displayMode={displayMode}
+        user={eventUsers[0]}
+        height={70}
       />
       
       {contextMenuOpen && onContextMenu && (
-        <EventContextMenu
-          event={event}
-          position={contextMenuPosition}
-          onClose={closeContextMenu}
-          onSelect={onContextMenu}
-        />
+        <EventContextMenu>
+          {/* The context menu will wrap the children provided */}
+          <div></div>
+        </EventContextMenu>
       )}
     </div>
   );

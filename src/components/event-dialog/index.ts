@@ -15,3 +15,4 @@ export * from './EventDialogBrain';
 export * from './EventDialogGuests';
 export * from './EventReservesSelection';
 export * from './AvailableUntilField';
+export * from './RsvpDeadlineField';

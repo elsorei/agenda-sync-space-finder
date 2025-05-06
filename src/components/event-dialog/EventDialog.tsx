@@ -34,8 +34,12 @@ export const EventDialog = ({
       setRsvpDeadline,
       inviteStatus,
       isEditMode,
+      reserveUserIds,
+      availableUntil,
+      setAvailableUntil,
     },
     onToggleUser,
+    onToggleReserveUser,
     addAttachment,
     removeAttachment,
     viewAttachment,
@@ -73,6 +77,8 @@ export const EventDialog = ({
           users={users}
           selectedUserIds={selectedUserIds}
           onToggleUser={onToggleUser}
+          reserveUserIds={reserveUserIds || []}
+          onToggleReserveUser={onToggleReserveUser}
           title={title}
           setTitle={setTitle}
           startTime={startTime}
@@ -84,6 +90,8 @@ export const EventDialog = ({
           isReadOnly={!isEditMode && !!event}
           rsvpDeadline={rsvpDeadline}
           setRsvpDeadline={setRsvpDeadline}
+          availableUntil={availableUntil}
+          setAvailableUntil={setAvailableUntil}
           inviteStatus={inviteStatus}
           attachments={attachments}
           onAddAttachment={addAttachment}
