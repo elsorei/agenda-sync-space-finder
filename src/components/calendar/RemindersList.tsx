@@ -48,6 +48,7 @@ const RemindersList = ({
               event={event}
               mainUserId={userId}
               users={users}
+              onClick={e => onEventClick(e, event)} // Aggiunta la proprietà onClick richiesta
               zIndex={1000 + index}
               style={{ height: `${hourHeight/2}px` }}
               hourHeight={hourHeight}

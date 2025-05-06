@@ -9,6 +9,20 @@ export const mockUsers: User[] = [
     avatar: "https://i.pravatar.cc/150?img=1",
     email: "elso.rei@example.com",
     color: "#9b87f5",
+  },
+  {
+    id: "user2",
+    name: "Paola Muglia",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    email: "paola.muglia@example.com",
+    color: "#f59b87",
+  },
+  {
+    id: "user3",
+    name: "Mattia Rei",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    email: "mattia.rei@example.com",
+    color: "#87f59b",
   }
 ];
 
