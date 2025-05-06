@@ -38,6 +38,7 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
     closeContextMenu
   } = useEventInteractions({
     event,
+    isSelected,
     onClick,
     onDoubleClick,
     onContextMenu
@@ -88,8 +89,12 @@ export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({
       />
       
       {contextMenuOpen && onContextMenu && (
-        <EventContextMenu>
-          {/* The context menu will wrap the children provided */}
+        <EventContextMenu
+          event={event}
+          position={contextMenuPosition}
+          onClose={closeContextMenu}
+          onSelect={onContextMenu}
+        >
           <div></div>
         </EventContextMenu>
       )}

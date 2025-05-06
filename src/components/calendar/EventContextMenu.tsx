@@ -11,10 +11,26 @@ import {
 
 interface EventContextMenuProps {
   children: React.ReactNode;
+  position?: { x: number; y: number };
+  onSelect?: (event: Event) => void;
+  event?: Event;
+  onClose?: () => void;
 }
 
-const EventContextMenu = ({ children }: EventContextMenuProps) => {
+const EventContextMenu = ({ 
+  children, 
+  position,
+  event,
+  onSelect,
+  onClose
+}: EventContextMenuProps) => {
   const handleMove = () => {
+    if (event && onSelect) {
+      onSelect(event);
+    }
+    if (onClose) {
+      onClose();
+    }
     toast({
       title: "Sposta evento",
       description: "Trascina per spostare l'evento",
@@ -22,6 +38,12 @@ const EventContextMenu = ({ children }: EventContextMenuProps) => {
   };
 
   const handleCopy = () => {
+    if (event && onSelect) {
+      onSelect(event);
+    }
+    if (onClose) {
+      onClose();
+    }
     toast({
       title: "Copia evento",
       description: "Trascina per copiare l'evento",

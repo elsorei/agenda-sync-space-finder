@@ -28,6 +28,7 @@ export const useEventDialog = ({
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [reserveUserIds, setReserveUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (event) {
@@ -39,6 +40,7 @@ export const useEventDialog = ({
       setEventType(event.type || 'impegno');
       setAttachments(event.attachments ? [...event.attachments.map(att => ({...att}))] : []);
       setIsEditMode(event.id.startsWith("new-"));
+      setReserveUserIds(event.reserveUserIds || []);
     } else {
       resetForm();
     }
@@ -54,6 +56,7 @@ export const useEventDialog = ({
     setAttachments([]);
     setIsEditMode(false);
     setShowFileUpload(false);
+    setReserveUserIds([]);
   };
 
   const validateForm = () => {
@@ -103,6 +106,30 @@ export const useEventDialog = ({
     setAttachments(prev => prev.filter(file => file.id !== fileId));
   };
 
+  const onToggleReserveUser = (userId: string, isReserve: boolean) => {
+    if (!isEditMode) {
+      toast({
+        title: "Modalità sola lettura",
+        description: "Clicca su 'Modifica' per abilitare le modifiche",
+      });
+      return;
+    }
+    
+    if (isReserve) {
+      // Adding to reserves: remove from primary guests if present
+      if (selectedUserIds.includes(userId)) {
+        setSelectedUserIds(prev => prev.filter(id => id !== userId));
+      }
+      // Add to reserves if not already there
+      if (!reserveUserIds.includes(userId)) {
+        setReserveUserIds(prev => [...prev, userId]);
+      }
+    } else {
+      // Remove from reserves
+      setReserveUserIds(prev => prev.filter(id => id !== userId));
+    }
+  };
+
   const state = {
     title,
     description,
@@ -113,6 +140,7 @@ export const useEventDialog = ({
     attachments,
     showFileUpload,
     isEditMode,
+    reserveUserIds,
   };
 
   const handlers = {
@@ -126,6 +154,7 @@ export const useEventDialog = ({
     setIsEditMode,
     handleAddFile,
     handleRemoveFile,
+    onToggleReserveUser,
     onSave: () => {
       if (!isEditMode) {
         setIsEditMode(true);
@@ -141,6 +170,7 @@ export const useEventDialog = ({
         start: startTime!,
         end: endTime!,
         userIds: [...selectedUserIds],
+        reserveUserIds: [...reserveUserIds],
         color: event?.color || "#9b87f5",
         type: eventType,
         attachments: attachments.map(att => ({...att}))
@@ -159,6 +189,7 @@ export const useEventDialog = ({
           setSelectedUserIds([...event.userIds]);
           setEventType(event.type || 'impegno');
           setAttachments(event.attachments ? [...event.attachments.map(att => ({...att}))] : []);
+          setReserveUserIds(event.reserveUserIds || []);
         }
         setIsEditMode(false);
         setShowFileUpload(false);

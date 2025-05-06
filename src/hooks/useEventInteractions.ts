@@ -4,12 +4,16 @@ import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { useState } from "react";
 
 interface EventInteractionsProps {
   event: Event;
-  isSelected: boolean;
+  isSelected?: boolean;
   onEventLongPress?: (event: Event) => void;
-  onEventClick: (e: React.MouseEvent, event: Event) => void;
+  onEventClick?: (e: React.MouseEvent, event: Event) => void;
+  onClick?: (event: Event) => void;
+  onDoubleClick?: (event: Event) => void;
+  onContextMenu?: (event: Event) => void;
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
@@ -17,14 +21,19 @@ interface EventInteractionsProps {
 
 export const useEventInteractions = ({
   event,
-  isSelected,
+  isSelected = false,
   onEventLongPress,
   onEventClick,
+  onClick,
+  onDoubleClick,
+  onContextMenu,
   onDragStart,
   onDragMove,
   onDragEnd,
 }: EventInteractionsProps) => {
   const isMobile = useIsMobile();
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
   // Configuration for long press handling
   const longPressHandlers = useLongPress(
@@ -40,8 +49,39 @@ export const useEventInteractions = ({
   const doubleTapHandler = useDoubleTap((e) => {
     e.stopPropagation();
     e.preventDefault();
-    onEventClick(e as React.MouseEvent, event);
+    if (onEventClick) {
+      onEventClick(e as React.MouseEvent, event);
+    }
   }, 300);
+
+  const closeContextMenu = () => {
+    setContextMenuOpen(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick(event);
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDoubleClick) {
+      onDoubleClick(event);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (onContextMenu) {
+      setContextMenuPosition({ x: e.clientX, y: e.clientY });
+      setContextMenuOpen(true);
+      onContextMenu(event);
+    }
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
@@ -112,18 +152,16 @@ export const useEventInteractions = ({
       onMouseDown: handleMouseDown,
       onMouseMove: handleMouseMove,
       onMouseUp: handleMouseUp,
-      onClick: (e: React.MouseEvent) => {
-        // Prevent regular click from creating events
-        e.stopPropagation();
-      },
-      onDoubleClick: (e: React.MouseEvent) => {
-        // Only handle double click on non-mobile
-        e.stopPropagation();
-        if (!isMobile) {
-          onEventClick(e, event);
-        }
-      },
+      onClick: handleClick,
+      onDoubleClick: handleDoubleClick,
+      onContextMenu: handleContextMenu,
     },
     isMobile,
+    handleClick,
+    handleDoubleClick,
+    handleContextMenu,
+    contextMenuOpen,
+    contextMenuPosition,
+    closeContextMenu
   };
 };

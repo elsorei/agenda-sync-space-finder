@@ -10,6 +10,9 @@ interface UseEventInteractionHandlersProps {
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
+  onClick?: (event: Event) => void;
+  onDoubleClick?: (event: Event) => void;
+  onContextMenu?: (event: Event) => void;
 }
 
 export function useEventInteractionHandlers({
@@ -20,12 +23,24 @@ export function useEventInteractionHandlers({
   onDragStart,
   onDragMove,
   onDragEnd,
+  onClick,
+  onDoubleClick,
+  onContextMenu,
 }: UseEventInteractionHandlersProps) {
-  const { handlers, isMobile } = useEventInteractions({
+  const { 
+    handlers, 
+    isMobile,
+    contextMenuOpen,
+    contextMenuPosition,
+    closeContextMenu 
+  } = useEventInteractions({
     event,
     isSelected,
     onEventLongPress,
     onEventClick,
+    onClick,
+    onDoubleClick,
+    onContextMenu,
     onDragStart,
     onDragMove,
     onDragEnd,
@@ -34,5 +49,8 @@ export function useEventInteractionHandlers({
   return {
     handlers,
     isMobile,
+    contextMenuOpen,
+    contextMenuPosition,
+    closeContextMenu,
   };
 }
