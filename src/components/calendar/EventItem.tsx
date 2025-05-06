@@ -10,8 +10,8 @@ import { Clock } from 'lucide-react';
 interface EventItemProps {
   event: Event;
   users: User[];
-  mainUserId?: string; // Aggiunto mainUserId come opzionale
-  onClick: (event: Event) => void;
+  mainUserId: string;
+  onClick: (e: React.MouseEvent) => void;
   onDoubleClick?: (event: Event) => void;
   onContextMenu?: (event: Event) => void;
   isSelected?: boolean;
@@ -32,7 +32,7 @@ interface EventItemProps {
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
-  zIndex?: number; // Aggiunto zIndex
+  zIndex?: number;
 }
 
 export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({ 

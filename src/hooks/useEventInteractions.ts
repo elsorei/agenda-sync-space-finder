@@ -11,7 +11,7 @@ interface EventInteractionsProps {
   isSelected?: boolean;
   onEventLongPress?: (event: Event) => void;
   onEventClick?: (e: React.MouseEvent, event: Event) => void;
-  onClick?: (event: Event) => void;
+  onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: (event: Event) => void;
   onContextMenu?: (event: Event) => void;
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
@@ -61,7 +61,7 @@ export const useEventInteractions = ({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onClick) {
-      onClick(event);
+      onClick(e);
     }
   };
 
