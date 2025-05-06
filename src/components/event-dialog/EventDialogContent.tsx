@@ -37,7 +37,7 @@ export const EventDialogContent = ({
   users,
   selectedUserIds,
   onToggleUser,
-  reserveUserIds = [],
+  reserveUserIds,
   onToggleReserveUser,
   title,
   setTitle,

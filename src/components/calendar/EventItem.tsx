@@ -10,6 +10,7 @@ import { Clock } from 'lucide-react';
 interface EventItemProps {
   event: Event;
   users: User[];
+  mainUserId?: string; // Added mainUserId property
   onClick: (event: Event) => void;
   onDoubleClick?: (event: Event) => void;
   onContextMenu?: (event: Event) => void;
@@ -22,6 +23,7 @@ interface EventItemProps {
 export const EventItem = React.forwardRef<HTMLDivElement, EventItemProps>(({ 
   event, 
   users, 
+  mainUserId,
   onClick, 
   onDoubleClick, 
   onContextMenu,
