@@ -1,28 +1,26 @@
 
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { TimePickerDemo } from "@/components/TimePicker";
-import { EventTypeSelection } from "./EventTypeSelection";
-import { UserSelection } from "./UserSelection";
-import { User } from "@/types";
 import { EventType } from "@/types";
+import { EventDialogDetails } from "./EventDialogDetails";
+import { EventDialogAttachments } from "./EventDialogAttachments";
 
 interface EventDialogContentProps {
   eventType: EventType;
   setEventType: (type: EventType) => void;
-  users: User[];
+  users: any[];
   selectedUserIds: string[];
   onToggleUser: (userId: string) => void;
   title: string;
-  setTitle: (value: string) => void;
+  setTitle: (title: string) => void;
   startTime: Date | null;
-  setStartTime: (date: Date) => void;
+  setStartTime: (time: Date | null) => void;
   endTime: Date | null;
-  setEndTime: (date: Date) => void;
+  setEndTime: (time: Date | null) => void;
   description: string;
-  setDescription: (value: string) => void;
-  isReadOnly?: boolean;
+  setDescription: (desc: string) => void;
+  isReadOnly: boolean;
+  rsvpDeadline?: Date;
+  setRsvpDeadline?: (deadline: Date | undefined) => void;
+  inviteStatus?: Record<string, string>;
 }
 
 export const EventDialogContent = ({
@@ -39,71 +37,32 @@ export const EventDialogContent = ({
   setEndTime,
   description,
   setDescription,
-  isReadOnly = false
-}: EventDialogContentProps) => (
-  <div className="space-y-4">
-    <EventTypeSelection 
-      value={eventType} 
-      onChange={setEventType} 
-      disabled={isReadOnly}
-    />
-    <UserSelection
-      users={users}
-      selectedUserIds={selectedUserIds}
-      onToggleUser={onToggleUser}
-      isReadOnly={isReadOnly}
-    />
-    <div className="grid grid-cols-4 items-center gap-4">
-      <Label htmlFor="title" className="text-right">
-        Titolo
-      </Label>
-      <Input
-        id="title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="col-span-3"
-        readOnly={isReadOnly}
+  isReadOnly,
+  rsvpDeadline,
+  setRsvpDeadline,
+  inviteStatus
+}: EventDialogContentProps) => {
+  return (
+    <div className="flex flex-col w-full">
+      <EventDialogDetails
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        startTime={startTime}
+        setStartTime={setStartTime}
+        endTime={endTime}
+        setEndTime={setEndTime}
+        eventType={eventType}
+        setEventType={setEventType}
+        users={users}
+        selectedUserIds={selectedUserIds}
+        onToggleUser={onToggleUser}
+        isReadOnly={isReadOnly}
+        rsvpDeadline={rsvpDeadline}
+        setRsvpDeadline={setRsvpDeadline}
+        inviteStatus={inviteStatus}
       />
     </div>
-    <div className="grid grid-cols-4 items-center gap-4">
-      <Label htmlFor="start" className="text-right">
-        Inizio
-      </Label>
-      <div className="col-span-3">
-        {startTime && (
-          <TimePickerDemo
-            date={startTime}
-            setDate={(d) => !isReadOnly && setStartTime(d)}
-          />
-        )}
-      </div>
-    </div>
-    <div className="grid grid-cols-4 items-center gap-4">
-      <Label htmlFor="end" className="text-right">
-        Fine
-      </Label>
-      <div className="col-span-3">
-        {endTime && (
-          <TimePickerDemo
-            date={endTime}
-            setDate={(d) => !isReadOnly && setEndTime(d)}
-          />
-        )}
-      </div>
-    </div>
-    <div className="grid grid-cols-4 items-start gap-4">
-      <Label htmlFor="description" className="text-right">
-        Descrizione
-      </Label>
-      <Textarea
-        id="description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="col-span-3"
-        rows={3}
-        readOnly={isReadOnly}
-      />
-    </div>
-  </div>
-);
-
+  );
+};

@@ -1,6 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
-import { Event, User, EventType } from "@/types";
+import { Event, User, EventType, InviteStatus } from "@/types";
 import { FileAttachment } from "@/types/files";
 import { useAttachmentActions } from "./useAttachmentActions";
 import { useUserSelection } from "./useUserSelection";
@@ -24,6 +24,10 @@ interface UseEventDialogActionsProps {
     setAttachments: (f: ((prev: FileAttachment[]) => FileAttachment[]) | FileAttachment[]) => void;
     isEditMode: boolean;
     setIsEditMode: (val: boolean) => void;
+    rsvpDeadline: Date | undefined;
+    setRsvpDeadline: (deadline: Date | undefined) => void;
+    inviteStatus: Record<string, InviteStatus>;
+    setInviteStatus: (f: ((prev: Record<string, InviteStatus>) => Record<string, InviteStatus>) | Record<string, InviteStatus>) => void;
     users: User[];
     event: Event | null;
   },
@@ -54,7 +58,8 @@ export const useEventDialogActions = ({
     title: state.title,
     startTime: state.startTime,
     endTime: state.endTime,
-    selectedUserIds: state.selectedUserIds
+    selectedUserIds: state.selectedUserIds,
+    rsvpDeadline: state.rsvpDeadline
   });
 
   const handleSave = () => {
@@ -69,6 +74,14 @@ export const useEventDialogActions = ({
 
     if (!validation.validateEvent()) return;
 
+    // Se ci sono nuovi utenti aggiunti, inizializzare il loro stato come "in attesa"
+    const updatedInviteStatus = {...state.inviteStatus};
+    state.selectedUserIds.forEach(userId => {
+      if (!updatedInviteStatus[userId]) {
+        updatedInviteStatus[userId] = 'pending';
+      }
+    });
+
     const updatedEvent: Event = {
       ...event,
       id: event?.id || `new-${Date.now()}`,
@@ -80,6 +93,8 @@ export const useEventDialogActions = ({
       end: state.endTime ? new Date(state.endTime.getTime()) : new Date(),
       color: event?.color || "#9b87f5",
       attachments: state.attachments.map((a) => ({ ...a })),
+      rsvpDeadline: state.rsvpDeadline,
+      inviteStatus: updatedInviteStatus
     };
 
     onSave(updatedEvent);
@@ -96,6 +111,8 @@ export const useEventDialogActions = ({
         state.setStartTime(event.start ? new Date(event.start) : null);
         state.setEndTime(event.end ? new Date(event.end) : null);
         state.setAttachments(event.attachments ? event.attachments.map((a) => ({ ...a })) : []);
+        state.setRsvpDeadline(event.rsvpDeadline);
+        state.setInviteStatus(event.inviteStatus || {});
         setIsEditMode(false);
       } else {
         state.setTitle("");
@@ -105,6 +122,8 @@ export const useEventDialogActions = ({
         state.setStartTime(null);
         state.setEndTime(null);
         state.setAttachments([]);
+        state.setRsvpDeadline(undefined);
+        state.setInviteStatus({});
         setIsEditMode(true);
       }
       toast({

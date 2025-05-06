@@ -32,6 +32,9 @@ export const EventDialog = ({
       endTime,
       setEndTime,
       attachments,
+      rsvpDeadline,
+      setRsvpDeadline,
+      inviteStatus,
       isEditMode,
     },
     onToggleUser,
@@ -81,6 +84,9 @@ export const EventDialog = ({
           description={description}
           setDescription={setDescription}
           isReadOnly={!isEditMode && !!event}
+          rsvpDeadline={rsvpDeadline}
+          setRsvpDeadline={setRsvpDeadline}
+          inviteStatus={inviteStatus}
         />
         <div className="mt-4">
           <EventDialogAttachments

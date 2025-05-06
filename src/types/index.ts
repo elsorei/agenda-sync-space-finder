@@ -1,7 +1,9 @@
+
 // Aggiorna il tipo Event per includere gli allegati
 import { FileAttachment } from './files';
 
 export type EventType = 'impegno' | 'appuntamento' | 'promemoria';
+export type InviteStatus = 'pending' | 'accepted' | 'declined';
 
 export interface Event {
   id: string;
@@ -12,7 +14,10 @@ export interface Event {
   userIds: string[];
   color: string;
   type: EventType;
-  attachments: FileAttachment[]; // Non più opzionale
+  attachments: FileAttachment[];
+  // Nuovi campi per la gestione delle adesioni
+  rsvpDeadline?: Date;
+  inviteStatus?: Record<string, InviteStatus>; // Mappa userId -> stato invito
 }
 
 export interface User {

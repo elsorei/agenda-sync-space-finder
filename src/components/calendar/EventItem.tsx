@@ -3,7 +3,8 @@ import React from "react";
 import { Event, User } from "@/types";
 import { cn } from "@/lib/utils";
 import { useEventInteractionHandlers } from "./hooks/useEventInteractionHandlers";
-import { PaperclipIcon } from "lucide-react";
+import { PaperclipIcon, ClockIcon } from "lucide-react";
+import { differenceInMinutes, isBefore } from "date-fns";
 
 interface EventItemProps {
   event: Event;
@@ -64,6 +65,15 @@ const EventItem = ({
   
   // Controlla se l'evento ha allegati
   const hasAttachments = Array.isArray(event.attachments) && event.attachments.length > 0;
+  
+  // Controlla se c'è una scadenza per le risposte
+  const hasRsvpDeadline = !!event.rsvpDeadline;
+  const now = new Date();
+  const isDeadlineApproaching = hasRsvpDeadline && 
+    isBefore(now, new Date(event.rsvpDeadline)) && 
+    differenceInMinutes(new Date(event.rsvpDeadline), now) < 1440; // Meno di 24 ore
+  const isDeadlinePassed = hasRsvpDeadline && 
+    isBefore(new Date(event.rsvpDeadline), now);
 
   // Combine passed style with dynamically generated style
   const eventStyle: React.CSSProperties = {
@@ -73,6 +83,8 @@ const EventItem = ({
     zIndex: zIndex, // Keep original z-index (events should have lower z-index than dialogs)
     backgroundColor: bgColor,
     opacity: isDragging ? 0.7 : 1,
+    // Se la scadenza è passata e non tutti hanno risposto, mostra un bordo tratteggiato
+    border: isDeadlinePassed ? '2px dashed #f87171' : undefined,
   };
 
   return (
@@ -92,6 +104,7 @@ const EventItem = ({
         <div className="font-semibold truncate flex items-center" title={event.title}>
           {event.title || "(Senza titolo)"}
           {hasAttachments && <PaperclipIcon className="h-3 w-3 ml-1" />}
+          {isDeadlineApproaching && <ClockIcon className="h-3 w-3 ml-1 animate-pulse" title="Scadenza per rispondere in arrivo" />}
         </div>
         <div className="text-xs ml-2 whitespace-nowrap">
           {new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}

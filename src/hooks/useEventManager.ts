@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Event, User } from "@/types";
+import { Event, User, InviteStatus } from "@/types";
 import { mockUsers, generateMockEvents } from "@/data/mockData";
 import { toast } from "@/hooks/use-toast";
 
@@ -41,11 +42,31 @@ export function useEventManager(): UseEventManagerResult {
 
   const refreshEvents = () => {
     const mockEvents = generateMockEvents(currentDate);
-    const eventsWithAttachments = mockEvents.map(event => ({
-      ...event,
-      attachments: event.attachments || []
-    }));
-    setEvents(eventsWithAttachments);
+    const eventsWithEnhancements = mockEvents.map(event => {
+      // Aggiungi status di invito e scadenza caso per caso
+      const hasDeadline = Math.random() > 0.7; // 30% degli eventi hanno una scadenza
+      const deadline = hasDeadline ? 
+        new Date(new Date(event.start).getTime() - Math.floor(Math.random() * 48) * 3600000) : 
+        undefined;
+      
+      // Genera stati casuali per gli inviti
+      const statuses: Record<string, InviteStatus> = {};
+      event.userIds.forEach(userId => {
+        const randomStatus = Math.random();
+        if (randomStatus < 0.6) statuses[userId] = 'accepted';
+        else if (randomStatus < 0.8) statuses[userId] = 'declined';
+        else statuses[userId] = 'pending';
+      });
+
+      return {
+        ...event,
+        attachments: event.attachments || [],
+        rsvpDeadline: deadline,
+        inviteStatus: statuses
+      };
+    });
+    
+    setEvents(eventsWithEnhancements);
     toast({
       title: "Aggiornamento completato",
       description: "Gli eventi sono stati aggiornati",
@@ -76,6 +97,12 @@ export function useEventManager(): UseEventManagerResult {
   };
 
   const handleAddEvent = (userIds: string[], start: Date, end: Date) => {
+    // Crea stato iniziale degli inviti
+    const inviteStatus: Record<string, InviteStatus> = {};
+    userIds.forEach(userId => {
+      inviteStatus[userId] = 'pending';
+    });
+    
     const newEvent: Event = {
       id: `new-${Date.now()}`,
       title: "",
@@ -85,8 +112,10 @@ export function useEventManager(): UseEventManagerResult {
       userIds,
       color: "#9b87f5",
       type: 'impegno',
-      attachments: []
+      attachments: [],
+      inviteStatus
     };
+    
     setSelectedEvent(newEvent);
     setIsEventDialogOpen(true);
   };
@@ -97,6 +126,12 @@ export function useEventManager(): UseEventManagerResult {
     eventCopy.end = new Date(eventCopy.end);
     if (!eventCopy.attachments) {
       eventCopy.attachments = [];
+    }
+    if (eventCopy.rsvpDeadline) {
+      eventCopy.rsvpDeadline = new Date(eventCopy.rsvpDeadline);
+    }
+    if (!eventCopy.inviteStatus) {
+      eventCopy.inviteStatus = {};
     }
     setSelectedEvent(eventCopy);
     setIsEventDialogOpen(true);
@@ -109,6 +144,13 @@ export function useEventManager(): UseEventManagerResult {
     if (!eventToSave.attachments) {
       eventToSave.attachments = [];
     }
+    if (eventToSave.rsvpDeadline) {
+      eventToSave.rsvpDeadline = new Date(eventToSave.rsvpDeadline);
+    }
+    if (!eventToSave.inviteStatus) {
+      eventToSave.inviteStatus = {};
+    }
+    
     setEvents(prev => {
       if (eventToSave.id.startsWith('new-')) {
         toast({

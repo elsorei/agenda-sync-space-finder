@@ -21,6 +21,8 @@ export const useEventDialogState = ({
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [rsvpDeadline, setRsvpDeadline] = useState<Date | undefined>(undefined);
+  const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
   // Inizializzazione dello stato quando cambia l'evento
   useEffect(() => {
@@ -33,6 +35,8 @@ export const useEventDialogState = ({
       setStartTime(event.start ? new Date(event.start) : null);
       setEndTime(event.end ? new Date(event.end) : null);
       setAttachments(event.attachments ? [...event.attachments.map(a => ({...a}))] : []);
+      setRsvpDeadline(event.rsvpDeadline ? new Date(event.rsvpDeadline) : undefined);
+      setInviteStatus(event.inviteStatus || {});
       
       // Se è un nuovo evento (ID inizia con "new-"), entra subito in modalità modifica
       const isNewEvent = event.id.startsWith("new-");
@@ -47,6 +51,8 @@ export const useEventDialogState = ({
       setStartTime(null);
       setEndTime(null);
       setAttachments([]);
+      setRsvpDeadline(undefined);
+      setInviteStatus({});
       setIsEditMode(true);
     }
   }, [event]);
@@ -68,6 +74,10 @@ export const useEventDialogState = ({
     setAttachments,
     isEditMode,
     setIsEditMode,
+    rsvpDeadline,
+    setRsvpDeadline,
+    inviteStatus,
+    setInviteStatus,
     users,
     event
   };

@@ -1,124 +1,133 @@
 
-import { EventType } from "@/types";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { EventType, User } from "@/types";
 import { Textarea } from "@/components/ui/textarea";
-import { TimePickerDemo } from "@/components/TimePicker";
-import { EventTypeSelection } from "./EventTypeSelection";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { UserSelection } from "./UserSelection";
-import { User } from "@/types";
+import { EventTypeSelection } from "./EventTypeSelection";
+import { TimePicker } from "@/components/TimePicker";
+import { RsvpDeadlineField } from "./RsvpDeadlineField";
+import { UserRsvpStatus } from "./UserRsvpStatus";
 
-// Props for the details section
 interface EventDialogDetailsProps {
+  title: string;
+  setTitle: (title: string) => void;
+  description: string;
+  setDescription: (desc: string) => void;
+  startTime: Date | null;
+  setStartTime: (time: Date | null) => void;
+  endTime: Date | null;
+  setEndTime: (time: Date | null) => void;
   eventType: EventType;
   setEventType: (type: EventType) => void;
   users: User[];
   selectedUserIds: string[];
   onToggleUser: (userId: string) => void;
-  title: string;
-  setTitle: (value: string) => void;
-  startTime: Date | null;
-  setStartTime: (date: Date) => void;
-  endTime: Date | null;
-  setEndTime: (date: Date) => void;
-  description: string;
-  setDescription: (value: string) => void;
-  isReadOnly?: boolean;
+  isReadOnly: boolean;
+  rsvpDeadline?: Date;
+  setRsvpDeadline?: (deadline: Date | undefined) => void;
+  inviteStatus?: Record<string, string>;
 }
 
 export const EventDialogDetails = ({
+  title,
+  setTitle,
+  description,
+  setDescription,
+  startTime,
+  setStartTime,
+  endTime,
+  setEndTime,
   eventType,
   setEventType,
   users,
   selectedUserIds,
   onToggleUser,
-  title,
-  setTitle,
-  startTime,
-  setStartTime,
-  endTime,
-  setEndTime,
-  description,
-  setDescription,
-  isReadOnly = false
+  isReadOnly,
+  rsvpDeadline,
+  setRsvpDeadline,
+  inviteStatus
 }: EventDialogDetailsProps) => {
-  // Se il componente è in modalità readonly, creiamo wrapper per non alterare lo stato
-  const handleStartTimeChange = (date: Date) => {
-    if (!isReadOnly) {
-      setStartTime(date);
-    }
-  };
-
-  const handleEndTimeChange = (date: Date) => {
-    if (!isReadOnly) {
-      setEndTime(date);
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Titolo</Label>
+        <Input
+          id="title"
+          placeholder="Inserisci un titolo"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted cursor-default" : ""}
+        />
+      </div>
+      
       <EventTypeSelection 
         value={eventType} 
         onChange={setEventType} 
-        disabled={isReadOnly}
+        isReadOnly={isReadOnly} 
       />
+
+      <div className="grid gap-2">
+        <Label>Data e ora</Label>
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <TimePicker 
+            value={startTime} 
+            onChange={setStartTime} 
+            disabled={isReadOnly} 
+            label="Inizio" 
+          />
+          <TimePicker 
+            value={endTime} 
+            onChange={setEndTime} 
+            disabled={isReadOnly} 
+            label="Fine" 
+          />
+        </div>
+      </div>
+
       <UserSelection
         users={users}
         selectedUserIds={selectedUserIds}
         onToggleUser={onToggleUser}
         isReadOnly={isReadOnly}
       />
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="title" className="text-right">
-          Titolo
-        </Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="col-span-3"
-          readOnly={isReadOnly}
+
+      {/* Nuovo campo per la scadenza RSVP */}
+      {setRsvpDeadline && (
+        <RsvpDeadlineField
+          rsvpDeadline={rsvpDeadline}
+          onDeadlineChange={setRsvpDeadline}
+          eventDate={startTime}
+          isReadOnly={isReadOnly}
         />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="start" className="text-right">
-          Inizio
-        </Label>
-        <div className="col-span-3">
-          {startTime && (
-            <TimePickerDemo
-              date={startTime}
-              setDate={handleStartTimeChange}
-            />
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="end" className="text-right">
-          Fine
-        </Label>
-        <div className="col-span-3">
-          {endTime && (
-            <TimePickerDemo
-              date={endTime}
-              setDate={handleEndTimeChange}
-            />
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-4 items-start gap-4">
-        <Label htmlFor="description" className="text-right">
-          Descrizione
-        </Label>
+      )}
+
+      {/* Mostra lo stato delle risposte se non siamo in modalità di creazione */}
+      {!isReadOnly && inviteStatus && (
+        <UserRsvpStatus
+          users={users}
+          selectedUserIds={selectedUserIds}
+          inviteStatus={inviteStatus}
+          isReadOnly={isReadOnly}
+        />
+      )}
+
+      <div className="grid gap-2">
+        <Label htmlFor="description">Descrizione</Label>
         <Textarea
           id="description"
+          placeholder="Aggiungi una descrizione"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="col-span-3"
-          rows={3}
+          rows={4}
           readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted cursor-default" : ""}
         />
       </div>
+
+      <Separator className="my-2" />
     </div>
   );
 };
