@@ -116,7 +116,7 @@ const CalendarGrid = ({
                   event={event}
                   mainUserId={userId}
                   users={users}
-                  onClick={e => onEventClick(e, event)} // Aggiunta la proprietà onClick richiesta
+                  onClick={(e) => onEventClick(e, event)}
                   zIndex={1000 + index}
                   top={`${(event.start.getHours() + event.start.getMinutes() / 60 - 7) * hourHeight}px`}
                   height={`${((new Date(event.end).getTime() - new Date(event.start).getTime()) / (60 * 60 * 1000)) * hourHeight}px`}

@@ -28,10 +28,10 @@ export const useEventDialogBrain = ({
   const [eventType, setEventType] = useState<EventType>('impegno');
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [rsvpDeadline, setRsvpDeadline] = useState<Date | null>(null);
+  const [rsvpDeadline, setRsvpDeadline] = useState<Date | undefined>(undefined);
   const [inviteStatus, setInviteStatus] = useState<Record<string, InviteStatus> | undefined>(undefined);
   const [reserveUserIds, setReserveUserIds] = useState<string[]>([]);
-  const [availableUntil, setAvailableUntil] = useState<Date | null>(null);
+  const [availableUntil, setAvailableUntil] = useState<Date | undefined>(undefined);
 
   // Initialize state from the event when it changes
   useEffect(() => {
@@ -44,10 +44,10 @@ export const useEventDialogBrain = ({
       setEventType(event.type || 'impegno');
       setAttachments(event.attachments ? [...event.attachments.map(att => ({...att}))] : []);
       setIsEditMode(event.id.startsWith("new-"));
-      setRsvpDeadline(event.rsvpDeadline ? new Date(event.rsvpDeadline) : null);
+      setRsvpDeadline(event.rsvpDeadline ? new Date(event.rsvpDeadline) : undefined);
       setInviteStatus(event.inviteStatus ? {...event.inviteStatus} : undefined);
       setReserveUserIds(event.reserveUserIds ? [...event.reserveUserIds] : []);
-      setAvailableUntil(event.availableUntil ? new Date(event.availableUntil) : null);
+      setAvailableUntil(event.availableUntil ? new Date(event.availableUntil) : undefined);
     }
   }, [event]);
 

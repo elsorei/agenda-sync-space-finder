@@ -127,6 +127,7 @@ export const AvailableUntilField = ({
                   onSelect={handleDateChange}
                   initialFocus
                   locale={it}
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             )}
