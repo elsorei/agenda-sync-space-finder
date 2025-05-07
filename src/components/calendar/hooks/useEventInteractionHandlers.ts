@@ -10,7 +10,7 @@ interface UseEventInteractionHandlersProps {
   onDragStart?: (e: React.TouchEvent | React.MouseEvent, event: Event) => void;
   onDragMove?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragEnd?: (e: React.TouchEvent | React.MouseEvent) => void;
-  onClick?: (event: Event) => void;
+  onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: (event: Event) => void;
   onContextMenu?: (event: Event) => void;
 }
