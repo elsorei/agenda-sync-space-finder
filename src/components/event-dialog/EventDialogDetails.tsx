@@ -103,16 +103,14 @@ export const EventDialogDetails = ({
         onToggleUser={onToggleUser}
         isReadOnly={isReadOnly}
       />
-
-      {/* Nuovo campo per la disponibilità */}
-      {setAvailableUntil && (
-        <AvailableUntilField
-          availableUntil={availableUntil}
-          onAvailableUntilChange={setAvailableUntil}
-          eventDate={startTime}
-          isReadOnly={isReadOnly}
-        />
-      )}
+      
+      {/* Campo per la scadenza RSVP - Assicuriamoci sia sempre visibile */}
+      <RsvpDeadlineField
+        rsvpDeadline={rsvpDeadline}
+        onDeadlineChange={setRsvpDeadline}
+        eventDate={startTime}
+        isReadOnly={isReadOnly}
+      />
 
       {/* Sezione per le riserve */}
       <EventReservesSelection
@@ -123,11 +121,11 @@ export const EventDialogDetails = ({
         isReadOnly={isReadOnly}
       />
 
-      {/* Campo per la scadenza RSVP */}
-      {setRsvpDeadline && (
-        <RsvpDeadlineField
-          rsvpDeadline={rsvpDeadline}
-          onDeadlineChange={setRsvpDeadline}
+      {/* Nuovo campo per la disponibilità */}
+      {setAvailableUntil && (
+        <AvailableUntilField
+          availableUntil={availableUntil}
+          onAvailableUntilChange={setAvailableUntil}
           eventDate={startTime}
           isReadOnly={isReadOnly}
         />

@@ -21,6 +21,8 @@ interface EventDialogContentProps {
     showFileUpload: boolean;
     isEditMode: boolean;
     reserveUserIds: string[];
+    rsvpDeadline?: Date;
+    availableUntil?: Date;
   };
   handlers: {
     setTitle: (t: string) => void;
@@ -30,6 +32,8 @@ interface EventDialogContentProps {
     setSelectedUserIds: (ids: string[]) => void;
     setEventType: (t: EventType) => void;
     setShowFileUpload: (s: boolean) => void;
+    setRsvpDeadline?: (d: Date | undefined) => void;
+    setAvailableUntil?: (d: Date | undefined) => void;
     handleAddFile: (f: FileAttachment) => void;
     handleRemoveFile: (id: string) => void;
     onToggleReserveUser: (userId: string, isReserve: boolean) => void;
@@ -83,6 +87,10 @@ export const EventDialogContent = ({
           description={state.description}
           setDescription={handlers.setDescription}
           isReadOnly={!state.isEditMode}
+          rsvpDeadline={state.rsvpDeadline}
+          setRsvpDeadline={handlers.setRsvpDeadline}
+          availableUntil={state.availableUntil}
+          setAvailableUntil={handlers.setAvailableUntil}
         />
         <div className="mt-4">
           <EventDialogAttachments

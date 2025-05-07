@@ -56,7 +56,9 @@ export const useEventDialog = ({
       attachments: state.attachments,
       showFileUpload: state.showFileUpload,
       isEditMode: state.isEditMode,
-      reserveUserIds: state.reserveUserIds
+      reserveUserIds: state.reserveUserIds,
+      rsvpDeadline: state.rsvpDeadline,
+      availableUntil: state.availableUntil
     },
     handlers: {
       setTitle: state.setTitle,
@@ -67,6 +69,8 @@ export const useEventDialog = ({
       setEventType: state.setEventType,
       setShowFileUpload: state.setShowFileUpload,
       setIsEditMode: state.setIsEditMode,
+      setRsvpDeadline: state.setRsvpDeadline,
+      setAvailableUntil: state.setAvailableUntil,
       handleAddFile,
       handleRemoveFile,
       onToggleReserveUser,
