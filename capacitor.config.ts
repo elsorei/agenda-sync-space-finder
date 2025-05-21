@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.5f397158505548d3b1e60d118c19d2f9',
+  appId: 'com.lovable.agendasync',
   appName: 'agenda-sync-space-finder',
   webDir: 'dist',
   server: {
