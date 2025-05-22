@@ -1,7 +1,7 @@
 
-import { CapacitorConfig } from '@capacitor/cli';
+// @ts-check
 
-const config: CapacitorConfig = {
+const config = {
   appId: 'com.lovable.agendasync',
   appName: 'agenda-sync-space-finder',
   webDir: 'dist',
@@ -14,4 +14,4 @@ const config: CapacitorConfig = {
   }
 };
 
-export default config;
+module.exports = config;
