@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "/agenda-sync-space-finder/",
   server: {
     host: "0.0.0.0",
     port: 5173,
